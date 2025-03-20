@@ -136,11 +136,8 @@ def Cap_Baseline_V1(input_df, lossofloadcost):
     # Constraints
 
     def HVAC_load_balance_rule(m, t):
-        if t < m.NumTime - 1:
-            net_thermal_load = m.HP2H[t] - m.C2H[t] + m.PCM_H2H[t] - m.PCM_C2H[t] # [kW] total active heat gain
-            return (m.Cooling_Load[t] - m.Heating_Load[t] + net_thermal_load == 0)
-        else:
-            return pyo.Constraint.Skip
+        net_thermal_load = m.HP2H[t] - m.C2H[t] + m.PCM_H2H[t] - m.PCM_C2H[t] # [kW] total active heat gain
+        return (m.Cooling_Load[t] - m.Heating_Load[t] + net_thermal_load == 0)
     model.HVAC_load_balance = pyo.Constraint(model.T, rule=HVAC_load_balance_rule)
 
     # Battery storage initialization and termination
@@ -417,11 +414,8 @@ def simulate(input_df, lossofloadcost, capacities):
     # Constraints
 
     def HVAC_load_balance_rule(m, t):
-        if t < m.NumTime - 1:
-            net_thermal_load = m.HP2H[t] - m.C2H[t] + m.PCM_H2H[t] - m.PCM_C2H[t] # [kW] total active heat gain
-            return (m.Cooling_Load[t] - m.Heating_Load[t] + net_thermal_load == 0)
-        else:
-            return pyo.Constraint.Skip
+        net_thermal_load = m.HP2H[t] - m.C2H[t] + m.PCM_H2H[t] - m.PCM_C2H[t] # [kW] total active heat gain
+        return (m.Cooling_Load[t] - m.Heating_Load[t] + net_thermal_load == 0)
     model.HVAC_load_balance = pyo.Constraint(model.T, rule=HVAC_load_balance_rule)
 
     # Battery storage initialization and termination
