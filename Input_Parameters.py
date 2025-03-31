@@ -3,7 +3,7 @@
 version = 1.0
 code_name = "Capa-Algo"
 
-calibration_file_path = "C:\\Users\\Fred\\Desktop\\Capacity_Algo\\Calibration_Model_Input.xlsx"
+calibration_file_path = "Calibration_Model_Input.xlsx"
 lossofloadcost = 1000 # [$/kWh]
 
 ############ Declare Parameters ############
