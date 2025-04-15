@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import Input_Parameters
 
-def SO_training(input_df_list, lossofloadcost):
+def SO_training(input_df_list, lossofloadcost, capacity_costs):
     """
     Two-stage stochastic optimization for capacity planning.
     
@@ -47,10 +47,10 @@ def SO_training(input_df_list, lossofloadcost):
     model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
     model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
     model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
-    model.C_PV = pyo.Param(initialize=Input_Parameters.C_PV)
-    model.C_PV_OP = pyo.Param(initialize=Input_Parameters.C_PV_OP)
-    model.C_B = pyo.Param(initialize=Input_Parameters.C_B)
-    model.C_B_OP = pyo.Param(initialize=Input_Parameters.C_B_OP)
+    model.C_PV = pyo.Param(initialize=capacity_costs[0])
+    model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
+    model.C_B = pyo.Param(initialize=capacity_costs[2])
+    model.C_B_OP = pyo.Param(initialize=capacity_costs[3])
     model.BatteryLoss = pyo.Param(initialize=Input_Parameters.BatteryLoss)
     model.MaxDischarge = pyo.Param(initialize=Input_Parameters.MaxDischarge)
     model.η = pyo.Param(initialize=Input_Parameters.η)
@@ -65,6 +65,7 @@ def SO_training(input_df_list, lossofloadcost):
     model.d = pyo.Param(initialize=Input_Parameters.d)
     model.CRF = pyo.Param(initialize=Input_Parameters.CRF)
     model.δt = pyo.Param(initialize=δt)
+    model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
     model.lossofloadcost = pyo.Param(initialize=lossofloadcost)
     model.η_PVIV = pyo.Param(initialize=0.94)
     model.Intial_B_SOC = pyo.Param(initialize=Input_Parameters.Intial_B_SOC)
@@ -107,6 +108,9 @@ def SO_training(input_df_list, lossofloadcost):
     model.C2PCM_C = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals)
     model.PCM_H2H = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals)
     model.PCM_C2H = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals)
+    model.PV2E = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals)
+    model.B2E = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals)
+    model.G2E = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals) # critical electrical load loss of load
     
     # Storage states
     model.InStorageBattery = pyo.Var(model.S, model.T, within=pyo.NonNegativeReals)
@@ -135,10 +139,17 @@ def SO_training(input_df_list, lossofloadcost):
     first_stage_cost = capital_cost * model.CRF + fixed_OM_cost
     
     # Second-stage cost: average outage cost across all scenarios
-    second_stage_cost = (1/num_scenarios) * sum(
-        model.δt * model.lossofloadcost * sum(model.G2H[s, t] for t in model.T) 
+    HVAC_cost = (1/num_scenarios) * sum(
+        model.δt * model.HVAC_lol_cost * sum(model.G2H[s, t] for t in model.T)
         for s in model.S
     )
+
+    critical_load_cost = (1/num_scenarios) * sum(
+        model.δt * model.lossofloadcost * sum(model.G2E[s, t] for t in model.T)
+        for s in model.S
+    )
+
+    second_stage_cost = HVAC_cost + critical_load_cost
 
     # Total objective: first_stage_cost + second_stage_cost
     model.objective = pyo.Objective(
@@ -163,30 +174,35 @@ def SO_training(input_df_list, lossofloadcost):
 
     # PV energy balance for each scenario
     def pv_energy_balance_rule(m, s, t):
-        return m.PV_param[s, t] * m.PVSize == m.PV2B[s, t] + m.PV2H[s, t] + m.PV2G[s, t]
+        return m.PV_param[s, t] * m.PVSize == m.PV2B[s, t] + m.PV2H[s, t] + m.PV2G[s, t] + m.PV2E[s, t]
     model.pv_energy_balance = pyo.Constraint(model.S, model.T, rule=pv_energy_balance_rule)
 
-    # House electricity load balance for each scenario
-    def house_electricity_rule(m, s, t):
-        return m.E_Load_param[s, t] + m.H2HP[s, t] + m.H2C[s, t] == m.PV2H[s, t] * m.η_PVIV + m.B2H[s, t] * m.η + m.G2H[s, t]
-    model.house_electricity = pyo.Constraint(model.S, model.T, rule=house_electricity_rule)
+    # House overall load balance
+    def house_electricity_rule(m, t):
+        return m.H2HP[s, t] + m.H2C[s, t] == m.PV2H[s, t] * m.η_PVIV + m.B2H[s, t] * m.η + m.G2H[s, t]
+    model.house_electricity = pyo.Constraint(model.T, rule=house_electricity_rule)
+
+    # House electricity load balance
+    def house_crit_electricity_rule(m, t):
+        return m.E_Load_param[s, t] == m.PV2E[s, t] * m.η_PVIV + m.B2E[s, t] * m.η + m.G2E[s, t]
+    model.house_crit_electricity = pyo.Constraint(model.T, rule=house_crit_electricity_rule)
 
     # Battery storage dynamics for each scenario
     def battery_storage_balance_rule(m, s, t):
         if t < m.NumTime - 1:
-            return m.InStorageBattery[s, t+1] == m.InStorageBattery[s, t] * (1 - m.BatteryLoss * m.δt) + m.δt * (m.PV2B[s, t] * m.η - m.B2H[s, t])
+            return m.InStorageBattery[s, t+1] == m.InStorageBattery[s, t] * (1 - m.BatteryLoss * m.δt) + m.δt * (m.PV2B[s, t] * m.η - m.B2H[s, t] - m.B2E[s, t])
         else:
             return pyo.Constraint.Skip
     model.battery_storage_balance = pyo.Constraint(model.S, model.T, rule=battery_storage_balance_rule)
 
     # Battery discharge constraint for each scenario
     def battery_discharge_rule(m, s, t):
-        return m.δt * m.B2H[s, t] <= m.InStorageBattery[s, t]
+        return m.δt * (m.B2H[s, t] + m.B2E[s, t]) <= m.InStorageBattery[s, t]
     model.battery_discharge = pyo.Constraint(model.S, model.T, rule=battery_discharge_rule)
 
     # Inverter capacity constraint for each scenario
     def battery_inverter_rule(m, s, t):
-        return m.B2H[s, t] + m.PV2B[s, t] <= m.InverterSize
+        return m.B2H[s, t] + m.PV2B[s, t] + m.B2E[s, t] <= m.InverterSize
     model.battery_inverter = pyo.Constraint(model.S, model.T, rule=battery_inverter_rule)
 
     # Battery size constraint for each scenario
@@ -290,12 +306,12 @@ def SO_training(input_df_list, lossofloadcost):
     
     ObjValue = round(pyo.value(model.objective), 3)
     First_stage_cost = round(pyo.value(first_stage_cost), 3)
+    HVAC_Cost = round(pyo.value(HVAC_cost), 3)
+    Critical_load_cost = round(pyo.value(critical_load_cost), 3)
     Second_stage_cost = round(pyo.value(second_stage_cost), 3)
+    return PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost
 
-    return PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost
 
-
-def simulate(input_df, lossofloadcost, capacities):
     """
     Simulate operation with fixed capacity sizes for a single scenario.
     

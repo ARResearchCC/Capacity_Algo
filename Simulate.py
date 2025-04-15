@@ -5,11 +5,7 @@ import pandas as pd
 
 import Input_Parameters
 
-"""
-The loss of load cost can be defined as the literal penalty of not having any power, not the cost of a diesel generator.
-The paper should be clear about achieving 100% clean energy without any diesel generation backup.
-"""
-def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
+def simulate(input_df, lossofloadcost, capacities, capacity_costs):
     
     datetime_col = input_df['DateTime']
     δt = (datetime_col.iloc[1] - datetime_col.iloc[0]).total_seconds() / 3600  # Time resolution in hours
@@ -39,12 +35,10 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
     model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
     model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
     model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
-    
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])
     model.C_B_OP = pyo.Param(initialize=capacity_costs[3])
-
     model.BatteryLoss = pyo.Param(initialize=Input_Parameters.BatteryLoss)
     model.MaxDischarge = pyo.Param(initialize=Input_Parameters.MaxDischarge)
     model.η = pyo.Param(initialize=Input_Parameters.η)
@@ -86,32 +80,16 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
     model.B2E = pyo.Var(model.T, within=pyo.NonNegativeReals)
     model.G2E = pyo.Var(model.T, within=pyo.NonNegativeReals) # critical electrical load loss of load
 
-    # Capacities
-    model.PVSize = pyo.Var(within=pyo.NonNegativeReals)
-    model.BatterySize = pyo.Var(within=pyo.NonNegativeReals)
-    model.PCM_H_Size = pyo.Var(within=pyo.NonNegativeReals)
-    model.PCM_C_Size = pyo.Var(within=pyo.NonNegativeReals)
+    # Capacities (Fixed)
+    model.PVSize = pyo.Param(initialize=capacities[0])
+    model.BatterySize = pyo.Param(initialize=capacities[1])
+    model.PCM_H_Size = pyo.Param(initialize=capacities[2])
+    model.PCM_C_Size = pyo.Param(initialize=capacities[3])
     
     # Storage states
     model.InStorageBattery = pyo.Var(model.T, within=pyo.NonNegativeReals)
     model.InStoragePCM_H = pyo.Var(model.T, within=pyo.NonNegativeReals)
     model.InStoragePCM_C = pyo.Var(model.T, within=pyo.NonNegativeReals)
-
-    '''
-    # Define expressions
-    model.H_score = Expression(model.T)  # Heating score expression
-    model.C_score = Expression(model.T)  # Cooling score expression
-    model.E_score = Expression(model.T)  # Electric load score expression
-
-    # These should be linear expressions since Heating_Load, Cooling_Load, and E_Load are inputs, although InStorage variables are all second stage decision variables.
-    # The worst case scenario for each load (heating, cooling, and electrical) happens when the respective score is the lowest (always positive)
-    for t in model.T:
-        model.H_score[t] = model.InStoragePCM_H[t] / model.Heating_Load[t]
-        model.C_score[t] = model.InStoragePCM_C[t] / model.Cooling_Load[t]
-        model.E_score[t] = model.InStorageBattery[t] / model.E_Load[t]
-    
-    # Worst case: Highest H_score, C_score, and E_score, and lowest PV production
-    '''
 
     # Objective Function
     # Total levelized capacity + fixed yearly operation & maintainence cost of the system (PV, electrochemical battery, 2 HPs (heating and cooling), Inverter, PCM H and C storages)
@@ -139,9 +117,9 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
     critical_load_cost =  model.δt * model.lossofloadcost * sum(model.G2E[t] for t in model.T)
 
     # First stage objective: capital_cost + fixed_OM_cost
-    # Second stage objective: outage_cost
+    # Second stage objective: HVAC_cost + critical_load_cost
     model.objective = pyo.Objective(
-        expr = first_stage_cost + HVAC_cost + critical_load_cost,
+        expr = HVAC_cost + critical_load_cost,
         sense = pyo.minimize
     )
 
@@ -288,18 +266,8 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
         raise RuntimeError("Solution is not optimal")
 
     # Retrieve results
-    PV_Size = round(pyo.value(model.PVSize), 3)
-    Battery_Size = round(pyo.value(model.BatterySize), 3)
-    PCM_Heating_Size = round(pyo.value(model.PCM_H_Size), 3)
-    PCM_Cooling_Size = round(pyo.value(model.PCM_C_Size), 3)
-    
     ObjValue = round(pyo.value(model.objective), 3)
     First_stage_cost = round(pyo.value(first_stage_cost), 3)
+    Total_Cost = ObjValue + First_stage_cost
 
-    HVAC_Cost = round(pyo.value(HVAC_cost), 3)
-    Critical_load_cost = round(pyo.value(critical_load_cost), 3)
-    Second_stage_cost = HVAC_Cost + Critical_load_cost
-
-    return PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost
-
-
+    return Total_Cost, First_stage_cost, ObjValue, round(pyo.value(HVAC_cost), 3), round(pyo.value(critical_load_cost), 3)

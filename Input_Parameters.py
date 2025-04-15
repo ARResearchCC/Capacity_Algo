@@ -103,3 +103,5 @@ M = 10000            # Big M value
 
 COP_H = 4            # COP heating
 COP_C = 3.8          # COP cooling
+
+HVAC_lol_cost = 10   # [$/kWh] loss of load cost due to thermal comfort
