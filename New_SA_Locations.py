@@ -17,11 +17,11 @@ from pathlib import Path
 
 # Define the base data directory, list of locations, and the weather year.
 data_dir = "Data"
-locations = ["Arizona", "Alaska", "Minnesota", "Florida", "HalfMoonBay"]
+locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
 scenarios = ["Office", "DataCenter", "RemoteClinic"]
 algorithms = ["LP", "SO", "RO"]
 fold = 5 # testing data is 1998-2002, 2003-2007...
-
+# Baseline capacity costs
 capacity_costs = [Input_Parameters.C_PV, Input_Parameters.C_PV_OP, Input_Parameters.C_B, Input_Parameters.C_B_OP]
 
 # 20 years of training data
@@ -41,12 +41,15 @@ data = sequential_numbers.reshape(i, j)
 
 # Convert the array into a DataFrame
 random_seeds = pd.DataFrame(data, columns=[f'Column_{k+1}' for k in range(j)])
+# The base case should always be the first row of the random seed matrix, for sensitivity analysis on locations, applications, and capacity costs.
 
+# Get the list of latitude, longitude, and timezones for all locations
 lats, lons, timezones = Data_Conversion.get_timezones(data_dir, locations)
 
-# Create the nested dictionary
+# Create the nested dictionary to store all input data
 nested_dict = {location: {year: {} for year in weather_year_list} for location in locations}
 
+# Get all input data for each of the 25 years
 for i in range(len(locations)):
     for j in range(len(weather_year_list)):
         
@@ -83,6 +86,7 @@ folder_name = "SA_Locations"
 # Create folder if it doesn't already exist
 os.makedirs(folder_name, exist_ok=True)
 
+# Iterate through locations
 for i in range(len(locations)):
     
     # Get current location
@@ -95,7 +99,7 @@ for i in range(len(locations)):
     training_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in fold}
     testing_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in fold}
     
-    # Start 5 fold cross validation
+    # Iterate through folds
     for k in range(fold):
         start_idx = k * 5
         testing_year_list = weather_year_list[start_idx : start_idx + 5]
@@ -104,7 +108,7 @@ for i in range(len(locations)):
         num_train_years = len(training_year_list)
         num_test_years = len(testing_year_list)
 
-        # Create the nested dictionary
+        # Create the temporary placeholder dictionary to store LP training results
         training_results_temporary_lp = {year: {} for year in training_year_list}
         
         ################################### LP ###################################
@@ -115,9 +119,9 @@ for i in range(len(locations)):
             year = training_year_list[y]            
             # Fetch input_df
             input_df = nested_dict[location][year]
-            # Run optimization function
+            # Run LP function
             PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Baseline_CO.Cap_Baseline_V1(input_df, Input_Parameters.lossofloadcost, capacity_costs)
-            # Store the variables in the temporary placeholder dictionary
+            # Store the variables in the temporary placeholder dictionary for LP training results
             training_results_temporary_lp[year] = {
                 'PV_Size': PV_Size,
                 'Battery_Size': Battery_Size,
@@ -130,7 +134,7 @@ for i in range(len(locations)):
                 'Training Critical Load Cost': Critical_load_cost
             }
 
-        # Initialize dictionary to store the average results
+        # Initialize dictionary to store the average results for LP training
         training_results_averaged_lp = {
             'PV_Size': 0,
             'Battery_Size': 0,
@@ -152,22 +156,25 @@ for i in range(len(locations)):
         for key in training_results_averaged_lp:
             training_results_averaged_lp[key] /= num_train_years
 
-        # Store training output formally
+        # Store LP training output formally
         training_results[k]["LP"] = training_results_averaged_lp
 
         # Testing
         test_capacities = [training_results[k]["LP"]['PV_Size'], training_results[k]["LP"]['Battery_Size'], training_results[k]["LP"]['PCM_Heating_Size'], training_results[k]["LP"]['PCM_Cooling_Size']]
 
-        # Initialize space to store testing result
+        # Initialize temporary space to store LP testing result
         testing_results_temporary_lp = {year: {} for year in testing_year_list}
 
         for y in range(testing_year_list):
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
             
             # Get current year
-            year = testing_year_list[y]   
-
-            # Store the variables in the nested dictionary
+            year = testing_year_list[y] 
+            # Fetch input_df
+            input_df = nested_dict[location][year]
+            # Simulate with LP result
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
+            
+            # Store the variables in the temporary placeholder dictionary for LP testing results
             testing_results_temporary_lp[year] = {
                 'Testing Total Cost': ObjValue,
                 'Testing Capital Cost': First_stage_cost,
@@ -176,7 +183,7 @@ for i in range(len(locations)):
                 'Testing Critical Load Cost': Critical_load_cost
             }
 
-        # Initialize dictionary to store the average results
+        # Initialize dictionary to store the average results for LP testing
         testing_results_averaged_lp = {
             'Testing Total Cost': 0,
             'Testing Capital Cost': 0,
@@ -194,7 +201,7 @@ for i in range(len(locations)):
         for key in testing_results_averaged_lp:
             testing_results_averaged_lp[key] /= num_test_years
 
-        # Store testing output formally
+        # Store LP testing output formally
         testing_results[k]["LP"] = testing_results_averaged_lp
     
         ################################### SO ###################################
@@ -217,7 +224,7 @@ for i in range(len(locations)):
         # Run SO function 
         PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = SO.SO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs)
         
-        # Store the variables in the nested dictionary
+        # Store SO training output formally
         training_results[k]["SO"] = {
             'PV_Size': PV_Size,
             'Battery_Size': Battery_Size,
@@ -234,16 +241,19 @@ for i in range(len(locations)):
 
         test_capacities = [training_results[k]["SO"]['PV_Size'], training_results[k]["SO"]['Battery_Size'], training_results[k]["SO"]['PCM_Heating_Size'], training_results[k]["SO"]['PCM_Cooling_Size']]
 
-        # Initialize space to store testing result
+        # Initialize temporary space to store SO testing result
         testing_results_temporary_so = {year: {} for year in testing_year_list}
 
         for y in range(testing_year_list):
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
             
             # Get current year
-            year = testing_year_list[y]   
-
-            # Store the variables in the nested dictionary
+            year = testing_year_list[y] 
+            # Fetch input_df
+            input_df = nested_dict[location][year]
+            # Simulate with SO result            
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
+            
+            # Store the variables in the temporary placeholder dictionary for SO testing results
             testing_results_temporary_so[year] = {
                 'Testing Total Cost': ObjValue,
                 'Testing Capital Cost': First_stage_cost,
@@ -252,7 +262,7 @@ for i in range(len(locations)):
                 'Testing Critical Load Cost': Critical_load_cost
             }
 
-        # Initialize dictionary to store the average results
+        # Initialize dictionary to store the average results for SO testing
         testing_results_averaged_SO = {
             'Testing Total Cost': 0,
             'Testing Capital Cost': 0,
@@ -270,7 +280,7 @@ for i in range(len(locations)):
         for key in testing_results_averaged_SO:
             testing_results_averaged_SO[key] /= num_test_years
 
-        # Store testing output formally
+        # Store SO testing output formally
         testing_results[k]["SO"] = testing_results_averaged_SO
 
         ################################### RO ###################################
@@ -280,7 +290,7 @@ for i in range(len(locations)):
         # Run RO function 
         PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = RO.RO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs)
         
-        # Store the variables in the nested dictionary
+        # Store RO training output formally
         training_results[k]["RO"] = {
             'PV_Size': PV_Size,
             'Battery_Size': Battery_Size,
@@ -297,16 +307,19 @@ for i in range(len(locations)):
 
         test_capacities = [training_results[k]["RO"]['PV_Size'], training_results[k]["RO"]['Battery_Size'], training_results[k]["RO"]['PCM_Heating_Size'], training_results[k]["RO"]['PCM_Cooling_Size']]
 
-        # Initialize space to store testing result
+        # Initialize temporary space to store RO testing result 
         testing_results_temporary_ro = {year: {} for year in testing_year_list}
 
         for y in range(testing_year_list):
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
             
             # Get current year
-            year = testing_year_list[y]   
-
-            # Store the variables in the nested dictionary
+            year = testing_year_list[y] 
+            # Fetch input_df
+            input_df = nested_dict[location][year]
+            # Simulate with RO result
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
+             
+            # Store the variables in the temporary placeholder dictionary for RO testing results
             testing_results_temporary_ro[year] = {
                 'Testing Total Cost': ObjValue,
                 'Testing Capital Cost': First_stage_cost,
@@ -315,7 +328,7 @@ for i in range(len(locations)):
                 'Testing Critical Load Cost': Critical_load_cost
             }
 
-        # Initialize dictionary to store the average results
+        # Initialize dictionary to store the average results for RO testing
         testing_results_averaged_RO = {
             'Testing Total Cost': 0,
             'Testing Capital Cost': 0,
@@ -333,10 +346,12 @@ for i in range(len(locations)):
         for key in testing_results_averaged_RO:
             testing_results_averaged_RO[key] /= num_test_years
 
-        # Store testing output formally
+        # Store RO testing output formally
         testing_results[k]["RO"] = testing_results_averaged_RO
 
-
+    # Reporting (export to .xlsx file)
+    # In the SA_Location folder, there should be five files, one for each location. In each .xlsx file, there should be 5 sheets, one for each fold. In each sheet, there should be a dataframe
+    # with 3 rows (LP, SO, RO), and the column names are the capacities, training costs, and testing costs.
     with pd.ExcelWriter(output_file) as writer:
         for k in training_results:
             combined_dict = {}
