@@ -4,7 +4,6 @@ version = 1.0
 code_name = "Capa-Algo"
 
 calibration_file_path = "Calibration_Model_Input.xlsx"
-lossofloadcost = 1000 # [$/kWh]
 
 ############ Declare Parameters ############
 
@@ -105,3 +104,4 @@ COP_H = 4            # COP heating
 COP_C = 3.8          # COP cooling
 
 HVAC_lol_cost = 10   # [$/kWh] loss of load cost due to thermal comfort
+lossofloadcost = 1000 # [$/kWh]

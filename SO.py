@@ -136,7 +136,7 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs):
         model.C_PCM_C_OP * model.PCM_C_Size
     )
 
-    first_stage_cost = capital_cost * model.CRF + fixed_OM_cost
+    first_stage_cost = (capital_cost * model.CRF + fixed_OM_cost)*(NumTime/8760)
     
     # Second-stage cost: average outage cost across all scenarios
     HVAC_cost = (1/num_scenarios) * sum(

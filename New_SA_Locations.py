@@ -18,6 +18,7 @@ from pathlib import Path
 # Define the base data directory, list of locations, and the weather year.
 data_dir = "Data"
 locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
+# locations = ["HalfMoonBay"]
 scenarios = ["Office", "DataCenter", "RemoteClinic"]
 algorithms = ["LP", "SO", "RO"]
 fold = 5 # testing data is 1998-2002, 2003-2007...
@@ -60,8 +61,9 @@ for i in range(len(locations)):
         random_seed = random_seeds.iloc[i, j]
 
         # Read NSRDB weather data of the given location of the given year
+        # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
         NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year)
-
+        
         # Prepare weather data file using NSRDB data
         weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[i], lons[i], timezones[i])
 
@@ -96,8 +98,8 @@ for i in range(len(locations)):
     output_file = os.path.join(folder_name, f"SA_Location_{location}.xlsx")
 
     # Create the nested dictionary to store training and testing results
-    training_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in fold}
-    testing_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in fold}
+    training_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in range(fold)}
+    testing_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in range(fold)}
     
     # Iterate through folds
     for k in range(fold):
@@ -113,7 +115,7 @@ for i in range(len(locations)):
         
         ################################### LP ###################################
         # Training
-        for y in range(training_year_list):
+        for y in range(len(training_year_list)):
             
             # Get current year
             year = training_year_list[y]            
@@ -165,7 +167,7 @@ for i in range(len(locations)):
         # Initialize temporary space to store LP testing result
         testing_results_temporary_lp = {year: {} for year in testing_year_list}
 
-        for y in range(testing_year_list):
+        for y in range(len(testing_year_list)):
             
             # Get current year
             year = testing_year_list[y] 
@@ -210,7 +212,7 @@ for i in range(len(locations)):
         input_df_list_train = []
         
         # Training
-        for y in range(training_year_list):
+        for y in range(len(training_year_list)):
             
             # Get current year
             year = training_year_list[y]
@@ -244,7 +246,7 @@ for i in range(len(locations)):
         # Initialize temporary space to store SO testing result
         testing_results_temporary_so = {year: {} for year in testing_year_list}
 
-        for y in range(testing_year_list):
+        for y in range(len(testing_year_list)):
             
             # Get current year
             year = testing_year_list[y] 
@@ -310,7 +312,7 @@ for i in range(len(locations)):
         # Initialize temporary space to store RO testing result 
         testing_results_temporary_ro = {year: {} for year in testing_year_list}
 
-        for y in range(testing_year_list):
+        for y in range(len(testing_year_list)):
             
             # Get current year
             year = testing_year_list[y] 

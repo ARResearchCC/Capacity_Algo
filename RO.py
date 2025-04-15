@@ -77,7 +77,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
         model.C_PCM_C_OP * model.PCM_C_Size
     )
     
-    model.first_stage_cost = capital_cost * model.CRF + fixed_OM_cost
+    model.first_stage_cost = (capital_cost * model.CRF + fixed_OM_cost)*(NumTime/8760)
     
     # Master objective: minimize first-stage cost + worst-case second-stage cost
     model.objective = pyo.Objective(
@@ -186,12 +186,12 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
         # House overall load balance
         def house_electricity_rule(b, t):
             return b.H2HP[t] + b.H2C[t] == b.PV2H[t] * b.η_PVIV + b.B2H[t] * b.η + b.G2H[t]
-        model.house_electricity = pyo.Constraint(model.T, rule=house_electricity_rule)
+        b.house_electricity = pyo.Constraint(model.T, rule=house_electricity_rule)
 
         # House electricity load balance
         def house_crit_electricity_rule(b, t):
             return b.E_Load[t] == b.PV2E[t] * b.η_PVIV + b.B2E[t] * b.η + b.G2E[t]
-        model.house_crit_electricity = pyo.Constraint(model.T, rule=house_crit_electricity_rule)
+        b.house_crit_electricity = pyo.Constraint(model.T, rule=house_crit_electricity_rule)
 
         # Battery storage dynamics
         def battery_storage_balance_rule(b, t):
@@ -378,7 +378,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
             
             # Calculate upper bound for current solution
             first_stage_val = (
-                prev_caps['PV'] * Input_Parameters.C_PV * Input_Parameters.CRF + 
+                (prev_caps['PV'] * Input_Parameters.C_PV * Input_Parameters.CRF + 
                 prev_caps['PV'] * Input_Parameters.C_PV_OP +
                 2 * prev_caps['Battery'] * Input_Parameters.C_B * Input_Parameters.CRF + 
                 prev_caps['Battery'] * Input_Parameters.C_B_OP +
@@ -388,7 +388,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
                 prev_caps['PCM_H'] * Input_Parameters.C_PCM_H_OP +
                 prev_caps['PCM_C'] * Input_Parameters.C_PCM_C * Input_Parameters.CRF + 
                 prev_caps['PCM_C'] * Input_Parameters.C_PCM_C_OP +
-                Input_Parameters.C_IV * Input_Parameters.CRF
+                Input_Parameters.C_IV * Input_Parameters.CRF)*(NumTime/8760)
             )
             
             current_UB = first_stage_val + worst_cost
@@ -497,7 +497,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
         Input_Parameters.C_PCM_C_OP * PCM_Cooling_Size
     )
     
-    First_stage_cost = round(cap_cost * Input_Parameters.CRF + om_cost, 3)
+    First_stage_cost = round(cap_cost * Input_Parameters.CRF + om_cost, 3)*(NumTime/8760)
     Second_stage_cost = round(pyo.value(model.hatQ), 3)
     
     # Get the broken-down cost components from the worst-case scenario

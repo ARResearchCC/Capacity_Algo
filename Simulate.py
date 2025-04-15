@@ -110,7 +110,7 @@ def simulate(input_df, lossofloadcost, capacities, capacity_costs):
         model.C_PCM_C_OP * model.PCM_C_Size
     )
 
-    first_stage_cost = capital_cost * model.CRF + fixed_OM_cost
+    first_stage_cost = (capital_cost * model.CRF + fixed_OM_cost)*(NumTime/8760)
     
     HVAC_cost = model.δt * model.HVAC_lol_cost * sum(model.G2H[t] for t in model.T)
     
