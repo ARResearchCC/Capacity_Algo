@@ -17,7 +17,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     Returns:
     --------
     tuple
-        (PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost)
+        (PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost)
     """
     # Number of scenarios
     num_scenarios = len(input_df_list)
@@ -149,9 +149,18 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
         b.InStoragePCM_H = pyo.Var(model.T, within=pyo.NonNegativeReals)
         b.InStoragePCM_C = pyo.Var(model.T, within=pyo.NonNegativeReals)
         
-        # Operational cost expression for this scenario
+        # Operational cost components for this scenario
+        b.HVAC_cost = pyo.Expression(
+            expr=b.δt * b.HVAC_lol_cost * sum(b.G2H[t] for t in model.T)
+        )
+        
+        b.critical_load_cost = pyo.Expression(
+            expr=b.δt * b.lossofloadcost * sum(b.G2E[t] for t in model.T)
+        )
+        
+        # Total operational cost expression (sum of components)
         b.operational_cost = pyo.Expression(
-            expr=(b.δt * b.HVAC_lol_cost * sum(b.G2H[t] for t in model.T) + b.δt * b.lossofloadcost * sum(b.G2E[t] for t in model.T))
+            expr=b.HVAC_cost + b.critical_load_cost
         )
         
         # HVAC load balance
@@ -291,8 +300,13 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     # Constraint for worst-case cost
     model.hatQ_constraints = pyo.ConstraintList()
     
+    # Variable to track the final worst-case scenario
+    final_worst_scenario = -1
+    
     # Implementation of decomposition algorithm
     def solve_model():
+        nonlocal final_worst_scenario  # Allow updating the final_worst_scenario variable
+        
         solver = pyo.SolverFactory('gurobi')
         solver.options['MIPGap'] = 1e-3
         # solver.options['NumericFocus'] = 3  # Higher focus on numerical accuracy
@@ -388,6 +402,9 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
                     model.hatQ >= model.scenario[worst_scenario].operational_cost
                 )
                 worst_scenarios.add(worst_scenario)
+                
+                # Update the final worst-case scenario
+                final_worst_scenario = worst_scenario
             
             # Unfix variables and solve master problem
             model.PVSize.unfix()
@@ -451,10 +468,10 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
             if iteration == max_iterations - 1:
                 print("\nWarning: Maximum iterations reached without convergence")
         
-        return
+        return final_worst_scenario
     
     # Run the decomposition algorithm
-    solve_model()
+    final_worst_scenario = solve_model()
     
     # Calculate final costs
     PV_Size = round(pyo.value(model.PVSize), 3)
@@ -482,6 +499,16 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     
     First_stage_cost = round(cap_cost * Input_Parameters.CRF + om_cost, 3)
     Second_stage_cost = round(pyo.value(model.hatQ), 3)
+    
+    # Get the broken-down cost components from the worst-case scenario
+    if final_worst_scenario >= 0:  # Check if we have a valid worst-case scenario
+        HVAC_Cost = round(pyo.value(model.scenario[final_worst_scenario].HVAC_cost), 3)
+        Critical_load_cost = round(pyo.value(model.scenario[final_worst_scenario].critical_load_cost), 3)
+    else:
+        # Fallback if no worst-case scenario was identified (shouldn't happen in normal execution)
+        HVAC_Cost = 0.0
+        Critical_load_cost = Second_stage_cost
+    
     ObjValue = round(First_stage_cost + Second_stage_cost, 3)
     
-    return PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost
+    return PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost
