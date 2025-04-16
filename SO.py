@@ -121,8 +121,8 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs):
     # First-stage cost: capital cost + fixed O&M
     capital_cost = (
         model.C_PV * model.PVSize +
-        2 * model.C_B * model.BatterySize +
-        2 * model.C_HP * model.HPSize +
+        model.C_B * model.BatterySize +
+        model.C_HP * model.HPSize +
         model.C_PCM_H * model.PCM_H_Size +
         model.C_PCM_C * model.PCM_C_Size +
         model.C_IV
@@ -131,7 +131,7 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs):
     fixed_OM_cost = (
         model.C_PV_OP * model.PVSize +
         model.C_B_OP * model.BatterySize +
-        2 * model.C_HP_OP * model.HPSize +
+        model.C_HP_OP * model.HPSize +
         model.C_PCM_H_OP * model.PCM_H_Size +
         model.C_PCM_C_OP * model.PCM_C_Size
     )
@@ -225,15 +225,10 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs):
         return m.H2C[s, t] == (m.C2PCM_C[s, t] + m.C2H[s, t]) / m.COP_C
     model.cooling_power_balance = pyo.Constraint(model.S, model.T, rule=cooling_power_balance_rule)
 
-    # Heat pump heating capacity constraint for each scenario
+    # Heat pump heating and cooling capacity constraint for each scenario
     def heat_pump_heating_capacity_rule(m, s, t):
-        return m.H2HP[s, t] <= m.HPSize
+        return m.H2HP[s, t] + m.H2C[s, t] <= m.HPSize
     model.heat_pump_heating_capacity = pyo.Constraint(model.S, model.T, rule=heat_pump_heating_capacity_rule)
-
-    # Heat pump cooling capacity constraint for each scenario
-    def heat_pump_cooling_capacity_rule(m, s, t):
-        return m.H2C[s, t] <= m.HPSize
-    model.heat_pump_cooling_capacity = pyo.Constraint(model.S, model.T, rule=heat_pump_cooling_capacity_rule)
 
     # PCM heating storage dynamics for each scenario
     def pcm_h_storage_balance_rule(m, s, t):

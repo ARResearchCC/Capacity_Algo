@@ -117,8 +117,8 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
     # Total levelized capacity + fixed yearly operation & maintainence cost of the system (PV, electrochemical battery, 2 HPs (heating and cooling), Inverter, PCM H and C storages)
     capital_cost = (
         model.C_PV * model.PVSize +
-        2 * model.C_B * model.BatterySize +
-        2 * model.C_HP * model.HPSize +
+        model.C_B * model.BatterySize +
+        model.C_HP * model.HPSize +
         model.C_PCM_H * model.PCM_H_Size +
         model.C_PCM_C * model.PCM_C_Size +
         model.C_IV
@@ -127,7 +127,7 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
     fixed_OM_cost = (
         model.C_PV_OP * model.PVSize +
         model.C_B_OP * model.BatterySize +
-        2 * model.C_HP_OP * model.HPSize +
+        model.C_HP_OP * model.HPSize +
         model.C_PCM_H_OP * model.PCM_H_Size +
         model.C_PCM_C_OP * model.PCM_C_Size
     )
@@ -214,15 +214,10 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
         return m.H2C[t] == (m.C2PCM_C[t] + m.C2H[t]) / m.COP_C
     model.cooling_power_balance = pyo.Constraint(model.T, rule=cooling_power_balance_rule)
 
-    # Heat pump heating capacity constraint
+    # Heat pump heating and cooling capacity constraint
     def heat_pump_heating_capacity_rule(m, t):
-        return m.H2HP[t] <= m.HPSize
+        return m.H2HP[t] + m.H2C[t] <= m.HPSize
     model.heat_pump_heating_capacity = pyo.Constraint(model.T, rule=heat_pump_heating_capacity_rule)
-
-    # Heat pump cooling capacity constraint
-    def heat_pump_cooling_capacity_rule(m, t):
-        return m.H2C[t] <= m.HPSize
-    model.heat_pump_cooling_capacity = pyo.Constraint(model.T, rule=heat_pump_cooling_capacity_rule)
 
     # PCM heating storage dynamics
     def pcm_h_storage_balance_rule(m, t):

@@ -17,85 +17,86 @@ from pathlib import Path
 
 # Define the base data directory, list of locations, and the weather year.
 data_dir = "Data"
-locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
-# locations = ["HalfMoonBay"]
+# locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
+location = ["HalfMoonBay"]
 scenarios = ["Office", "DataCenter", "RemoteClinic"]
 algorithms = ["LP", "SO", "RO"]
+
 fold = 5 # testing data is 1998-2002, 2003-2007...
 # Baseline capacity costs
-capacity_costs = [Input_Parameters.C_PV, Input_Parameters.C_PV_OP, Input_Parameters.C_B, Input_Parameters.C_B_OP]
+capacity_costs_1 = [Input_Parameters.C_PV, Input_Parameters.C_PV_OP, Input_Parameters.C_B, Input_Parameters.C_B_OP]
+capacity_costs_2 = [Input_Parameters.C_PV, Input_Parameters.C_PV_OP, Input_Parameters.C_B_low, Input_Parameters.C_B_OP_low]
+capacity_costs_3 = [Input_Parameters.C_PV_low, Input_Parameters.C_PV_OP_low, Input_Parameters.C_B, Input_Parameters.C_B_OP]
+capacity_costs_4 = [Input_Parameters.C_PV_low, Input_Parameters.C_PV_OP_low, Input_Parameters.C_B_low, Input_Parameters.C_B_OP_low]
+capacity_costs_list = [capacity_costs_1, capacity_costs_2, capacity_costs_3, capacity_costs_4]
+capacity_cost_names = ["HPHB", "HPLB", "LPHB", "LPLB"]
 
 # 20 years of training data
 weather_year_list = list(range(1998, 2023))  # The upper bound in range() is exclusive
 
 # Set a random seed for consistency
 # Define the number of rows (i) and columns (j)
-i = len(locations)  # Number of rows
+
 j = len(weather_year_list)  # Number of columns
 
 # Generate a sequential array of numbers starting from 1
-total_cells = i * j  # Total number of cells in the DataFrame
+total_cells = j  # Total number of cells in the DataFrame
 sequential_numbers = np.arange(1, total_cells + 1)  # Generates 1, 2, 3, ..., i*j
-
-# Reshape the array into a 2D array with i rows and j columns
-data = sequential_numbers.reshape(i, j)
-
-# Convert the array into a DataFrame
-random_seeds = pd.DataFrame(data, columns=[f'Column_{k+1}' for k in range(j)])
+random_seeds = sequential_numbers
 # The base case should always be the first row of the random seed matrix, for sensitivity analysis on locations, applications, and capacity costs.
 
 # Get the list of latitude, longitude, and timezones for all locations
-lats, lons, timezones = Data_Conversion.get_timezones(data_dir, locations)
+lats, lons, timezones = Data_Conversion.get_timezones(data_dir, location)
 
 # Create the nested dictionary to store all input data
-nested_dict = {location: {year: {} for year in weather_year_list} for location in locations}
+nested_dict = {year: {} for year in weather_year_list}
 
 # Get all input data for each of the 25 years
-for i in range(len(locations)):
-    for j in range(len(weather_year_list)):
-        
-        location = locations[i]
-        year = weather_year_list[j]
-        
-        # Get a unique random seed number
-        random_seed = random_seeds.iloc[i, j]
 
-        # Read NSRDB weather data of the given location of the given year
-        # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
-        NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year)
-        
-        # Prepare weather data file using NSRDB data
-        weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[i], lons[i], timezones[i])
+for j in range(len(weather_year_list)):
 
-        # Prepare heating and cooling load using weather data and passive model
-        NetHeatTransfers = Passive_Model.passive_model(Input_Parameters.calibration_file_path, weather_data, Input_Parameters.T_indoor_constant, lats[i])
+    year = weather_year_list[j]
+    
+    # Get a unique random seed number
+    random_seed = random_seeds[j]
 
-        # Prepare solar PV capacity factor using weather data
-        pv_cf = Solar_Generation.generate_pv(weather_data, lats[i])
+    # Read NSRDB weather data of the given location of the given year
+    # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
+    NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year).head(24)
+    
+    # Prepare weather data file using NSRDB data
+    weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[0], lons[0], timezones[0])
 
-        # Prepare occupancy and electrical load schedule using for a specific random seed number for a specific year at a specific location
-        load_sched = Electrical_Load.generate_schedules("bayes", weather_data, random_seed)
-        
-        # Combine all relative input data as input_df, which will be the input of the capacity optimization algorithm
-        input_df = Data_Conversion.combine_input_NSRDB(weather_data, load_sched, pv_cf, NetHeatTransfers)
-        
-        # Add input_df to list
-        nested_dict[location][year] = input_df
+    # Prepare heating and cooling load using weather data and passive model
+    NetHeatTransfers = Passive_Model.passive_model(Input_Parameters.calibration_file_path, weather_data, Input_Parameters.T_indoor_constant, lats[0])
+
+    # Prepare solar PV capacity factor using weather data
+    pv_cf = Solar_Generation.generate_pv(weather_data, lats[0])
+
+    # Prepare occupancy and electrical load schedule using for a specific random seed number for a specific year at a specific location
+    load_sched = Electrical_Load.generate_schedules("bayes", weather_data, random_seed)
+    
+    # Combine all relative input data as input_df, which will be the input of the capacity optimization algorithm
+    input_df = Data_Conversion.combine_input_NSRDB(weather_data, load_sched, pv_cf, NetHeatTransfers)
+    
+    # Add input_df to list
+    nested_dict[year] = input_df
 
 
 # Define folder name
-folder_name = "SA_Locations"
+folder_name = "SA_Capacity_Costs"
 # Create folder if it doesn't already exist
 os.makedirs(folder_name, exist_ok=True)
 
-# Iterate through locations
-for i in range(len(locations)):
+# Iterate through capacity costs list
+for i in range(len(capacity_costs_list)):
     
-    # Get current location
-    location = locations[i]
+    # Get current capacity costs
+    capacity_costs = capacity_costs_list[i]
+    capacity_cost_scenario = capacity_cost_names[i]
 
     # Make a excel workbook file
-    output_file = os.path.join(folder_name, f"SA_Location_{location}.xlsx")
+    output_file = os.path.join(folder_name, f"SA_Capacity_Costs_{capacity_cost_scenario}.xlsx")
 
     # Create the nested dictionary to store training and testing results
     training_results = {fold_iteration: {algo: {} for algo in algorithms} for fold_iteration in range(fold)}
@@ -120,7 +121,7 @@ for i in range(len(locations)):
             # Get current year
             year = training_year_list[y]            
             # Fetch input_df
-            input_df = nested_dict[location][year]
+            input_df = nested_dict[year]
             # Run LP function
             PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Baseline_CO.Cap_Baseline_V1(input_df, Input_Parameters.lossofloadcost, capacity_costs)
             # Store the variables in the temporary placeholder dictionary for LP training results
@@ -172,7 +173,7 @@ for i in range(len(locations)):
             # Get current year
             year = testing_year_list[y] 
             # Fetch input_df
-            input_df = nested_dict[location][year]
+            input_df = nested_dict[year]
             # Simulate with LP result
             ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
             
@@ -218,7 +219,7 @@ for i in range(len(locations)):
             year = training_year_list[y]
 
             # Fetch input_df
-            input_df = nested_dict[location][year]
+            input_df = nested_dict[year]
 
             # Add input_df to list
             input_df_list_train.append(input_df)
@@ -251,7 +252,7 @@ for i in range(len(locations)):
             # Get current year
             year = testing_year_list[y] 
             # Fetch input_df
-            input_df = nested_dict[location][year]
+            input_df = nested_dict[year]
             # Simulate with SO result            
             ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
             
@@ -317,7 +318,7 @@ for i in range(len(locations)):
             # Get current year
             year = testing_year_list[y] 
             # Fetch input_df
-            input_df = nested_dict[location][year]
+            input_df = nested_dict[year]
             # Simulate with RO result
             ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
              
@@ -352,7 +353,7 @@ for i in range(len(locations)):
         testing_results[k]["RO"] = testing_results_averaged_RO
 
     # Reporting (export to .xlsx file)
-    # In the SA_Location folder, there should be five files, one for each location. In each .xlsx file, there should be 5 sheets, one for each fold. In each sheet, there should be a dataframe
+    # In the SA_Capacity_Costs folder, there should be four files, one for each capacity cost scenario. In each .xlsx file, there should be 5 sheets, one for each fold. In each sheet, there should be a dataframe
     # with 3 rows (LP, SO, RO), and the column names are the capacities, training costs, and testing costs.
     with pd.ExcelWriter(output_file) as writer:
         for k in training_results:

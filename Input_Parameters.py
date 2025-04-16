@@ -83,25 +83,30 @@ BatteryLoss = 0.01/24# [/hr]
 MaxDischarge = 0.8   # [1]
 η = 0.98             # Battery inverter efficiency
 
-C_PV = 1000          # [$/kW]
-C_PV_OP = 10         # [$/kW/yr]
-C_B = 600            # [$/kWh]
-C_B_OP = 30          # [$/kWh/yr]
+C_PV = 1500          # [$/kW]
+C_PV_OP = 15         # [$/kW/yr]
+C_B = 500            # [$/kWh]
+C_B_OP = 5           # [$/kWh/yr]
 C_HP = 10000         # [$]
 C_HP_OP = 0.02 * C_HP # [$/yr]
-C_PCM_H = 300        # [$/kWh]
-C_PCM_H_OP = 0.02 * C_PCM_H # [$/kWh/yr]
-C_PCM_C = 300        # [$/kWh]
-C_PCM_C_OP = 0.02 * C_PCM_C # [$/kWh/yr]
+C_PCM_H = 70        # [$/kWh]
+C_PCM_H_OP = 0.04 * C_PCM_H # [$/kWh/yr]
+C_PCM_C = 70        # [$/kWh]
+C_PCM_C_OP = 0.04 * C_PCM_C # [$/kWh/yr]
+
+C_PV_low = 500          # [$/kW]
+C_PV_OP_low = 10         # [$/kW/yr]
+C_B_low = 250            # [$/kWh]
+C_B_OP_low = 0           # [$/kWh/yr]
+
 
 Lifetime = 20        # [years]
-Lifetime_battery = 10# [years]
 d = 0.03             # Discount rate
 CRF = (d * (1 + d)**Lifetime) / ((1 + d)**Lifetime - 1)  # Capital recovery factor
 M = 10000            # Big M value
 
-COP_H = 4            # COP heating
-COP_C = 3.8          # COP cooling
+COP_H = 3.5           # COP heating
+COP_C = 3.5           # COP cooling
 
 HVAC_lol_cost = 10   # [$/kWh] loss of load cost due to thermal comfort
 lossofloadcost = 1000 # [$/kWh]

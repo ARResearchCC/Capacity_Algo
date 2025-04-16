@@ -62,8 +62,8 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     # First-stage costs (capital + fixed O&M)
     capital_cost = (
         model.C_PV * model.PVSize +
-        2 * model.C_B * model.BatterySize +
-        2 * model.C_HP * model.HPSize +
+        model.C_B * model.BatterySize +
+        model.C_HP * model.HPSize +
         model.C_PCM_H * model.PCM_H_Size +
         model.C_PCM_C * model.PCM_C_Size +
         model.C_IV
@@ -72,7 +72,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     fixed_OM_cost = (
         model.C_PV_OP * model.PVSize +
         model.C_B_OP * model.BatterySize +
-        2 * model.C_HP_OP * model.HPSize +
+        model.C_HP_OP * model.HPSize +
         model.C_PCM_H_OP * model.PCM_H_Size +
         model.C_PCM_C_OP * model.PCM_C_Size
     )
@@ -231,15 +231,10 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
             return b.H2C[t] == (b.C2PCM_C[t] + b.C2H[t]) / b.COP_C
         b.cooling_power_balance = pyo.Constraint(model.T, rule=cooling_power_balance_rule)
         
-        # Heat pump heating capacity constraint
+        # Heat pump heating and cooling capacity constraint
         def heat_pump_heating_capacity_rule(b, t):
-            return b.H2HP[t] <= b.HPSize
+            return b.H2HP[t] + b.H2C[t] <= b.HPSize
         b.heat_pump_heating_capacity = pyo.Constraint(model.T, rule=heat_pump_heating_capacity_rule)
-        
-        # Heat pump cooling capacity constraint
-        def heat_pump_cooling_capacity_rule(b, t):
-            return b.H2C[t] <= b.HPSize
-        b.heat_pump_cooling_capacity = pyo.Constraint(model.T, rule=heat_pump_cooling_capacity_rule)
         
         # PCM heating storage dynamics
         def pcm_h_storage_balance_rule(b, t):
@@ -380,10 +375,10 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
             first_stage_val = (
                 (prev_caps['PV'] * Input_Parameters.C_PV * Input_Parameters.CRF + 
                 prev_caps['PV'] * Input_Parameters.C_PV_OP +
-                2 * prev_caps['Battery'] * Input_Parameters.C_B * Input_Parameters.CRF + 
+                prev_caps['Battery'] * Input_Parameters.C_B * Input_Parameters.CRF + 
                 prev_caps['Battery'] * Input_Parameters.C_B_OP +
-                2 * Input_Parameters.HPSize * Input_Parameters.C_HP * Input_Parameters.CRF + 
-                2 * Input_Parameters.HPSize * Input_Parameters.C_HP_OP +
+                Input_Parameters.HPSize * Input_Parameters.C_HP * Input_Parameters.CRF + 
+                Input_Parameters.HPSize * Input_Parameters.C_HP_OP +
                 prev_caps['PCM_H'] * Input_Parameters.C_PCM_H * Input_Parameters.CRF + 
                 prev_caps['PCM_H'] * Input_Parameters.C_PCM_H_OP +
                 prev_caps['PCM_C'] * Input_Parameters.C_PCM_C * Input_Parameters.CRF + 
@@ -482,8 +477,8 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     # Calculate first-stage cost
     cap_cost = (
         Input_Parameters.C_PV * PV_Size +
-        2 * Input_Parameters.C_B * Battery_Size +
-        2 * Input_Parameters.C_HP * Input_Parameters.HPSize +
+        Input_Parameters.C_B * Battery_Size +
+        Input_Parameters.C_HP * Input_Parameters.HPSize +
         Input_Parameters.C_PCM_H * PCM_Heating_Size +
         Input_Parameters.C_PCM_C * PCM_Cooling_Size +
         Input_Parameters.C_IV
@@ -492,7 +487,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     om_cost = (
         Input_Parameters.C_PV_OP * PV_Size +
         Input_Parameters.C_B_OP * Battery_Size +
-        2 * Input_Parameters.C_HP_OP * Input_Parameters.HPSize +
+        Input_Parameters.C_HP_OP * Input_Parameters.HPSize +
         Input_Parameters.C_PCM_H_OP * PCM_Heating_Size +
         Input_Parameters.C_PCM_C_OP * PCM_Cooling_Size
     )
