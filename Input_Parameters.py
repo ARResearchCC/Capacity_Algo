@@ -108,5 +108,5 @@ M = 10000            # Big M value
 COP_H = 3.5           # COP heating
 COP_C = 3.5           # COP cooling
 
-HVAC_lol_cost = 10   # [$/kWh] loss of load cost due to thermal comfort
-lossofloadcost = 1000 # [$/kWh]
+HVAC_lol_cost = 3   # [$/kWh] loss of load cost due to thermal comfort (residential loss of load value)
+lossofloadcost = 300 # [$/kWh] loss of load penalty for critical electrical load for FOB (small C&I)

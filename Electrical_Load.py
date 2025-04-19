@@ -167,7 +167,7 @@ def bayes_schedule(weather, input_random_seed):
     lighting_max_load = 0.100  # [kWh] on if occupied
     comp_charge_low_weights = [0.50, 0.50, 0.0]
     comp_charge_high_weights = [0.25, 0.50, 0.25]
-    comp_charge_loads = [0, 0.050, 0.100]  # [kWh]
+    comp_charge_loads = [0, 0.5, 1]  # [kWh]
     kettle_low_weights = [0.70, 0.20, 0.10]
     kettle_high_weights = [0.50, 0.30, 0.20]
     kettle_loads = [0, 0.1333, 0.266]  # [kWh]
