@@ -58,7 +58,7 @@ for i in range(len(scenarios)):
 
         # Read NSRDB weather data of the given location of the given year
         # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
-        NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year).head(24)
+        NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year)
         
         # Prepare weather data file using NSRDB data
         weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[0], lons[0], timezones[0])
