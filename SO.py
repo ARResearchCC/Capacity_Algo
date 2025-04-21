@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import Input_Parameters
 
-def SO_training(input_df_list, lossofloadcost, capacity_costs):
+def SO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     """
     Two-stage stochastic optimization for capacity planning.
     
@@ -46,7 +46,10 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs):
     # Constants as parameters
     model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
     model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
-    model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+    if scenario == 'DC':           
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+    else:
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])

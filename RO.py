@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import Input_Parameters
 
-def RO_training(input_df_list, lossofloadcost, capacity_costs):
+def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     """
     Robust optimization for capacity planning (min-max-min structure).
     
@@ -44,7 +44,10 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
     # Define master problem parameters
     model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
     model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
-    model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+    if scenario == 'DC':           
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+    else:
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])
@@ -99,7 +102,10 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs):
         # Parameters
         b.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
         b.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
-        b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+        if scenario == 'DC':           
+            b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+        else:
+            b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
         b.C_PV = pyo.Param(initialize=capacity_costs[0])
         b.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
         b.C_B = pyo.Param(initialize=capacity_costs[2])

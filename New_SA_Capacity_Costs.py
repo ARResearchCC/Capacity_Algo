@@ -19,7 +19,7 @@ from pathlib import Path
 data_dir = "Data"
 # locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
 location = ["HalfMoonBay"]
-scenarios = ["Office", "DataCenter", "RemoteClinic"]
+scenarios = ["FOB", "DC", "RC"]
 algorithms = ["LP", "SO", "RO"]
 
 fold = 5 # testing data is 1998-2002, 2003-2007...
@@ -43,7 +43,7 @@ j = len(weather_year_list)  # Number of columns
 total_cells = j  # Total number of cells in the DataFrame
 sequential_numbers = np.arange(1, total_cells + 1)  # Generates 1, 2, 3, ..., i*j
 random_seeds = sequential_numbers
-# The base case should always be the first row of the random seed matrix, for sensitivity analysis on locations, applications, and capacity costs.
+# The base case should always be the first row of the random seed matrix, for sensitivity analysis on locations, scenarios, and capacity costs.
 
 # Get the list of latitude, longitude, and timezones for all locations
 lats, lons, timezones = Data_Conversion.get_timezones(data_dir, location)
@@ -62,7 +62,7 @@ for j in range(len(weather_year_list)):
 
     # Read NSRDB weather data of the given location of the given year
     # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
-    NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year).head(24)
+    NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year)
     
     # Prepare weather data file using NSRDB data
     weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[0], lons[0], timezones[0])
@@ -74,7 +74,7 @@ for j in range(len(weather_year_list)):
     pv_cf = Solar_Generation.generate_pv(weather_data, lats[0])
 
     # Prepare occupancy and electrical load schedule using for a specific random seed number for a specific year at a specific location
-    load_sched = Electrical_Load.generate_schedules("bayes", weather_data, random_seed)
+    load_sched = Electrical_Load.generate_schedules("FOB", weather_data, random_seed)
     
     # Combine all relative input data as input_df, which will be the input of the capacity optimization algorithm
     input_df = Data_Conversion.combine_input_NSRDB(weather_data, load_sched, pv_cf, NetHeatTransfers)
@@ -123,7 +123,7 @@ for i in range(len(capacity_costs_list)):
             # Fetch input_df
             input_df = nested_dict[year]
             # Run LP function
-            PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Baseline_CO.Cap_Baseline_V1(input_df, Input_Parameters.lossofloadcost, capacity_costs)
+            PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Baseline_CO.Cap_Baseline_V1(input_df, Input_Parameters.lossofloadcost, capacity_costs, "FOB")
             # Store the variables in the temporary placeholder dictionary for LP training results
             training_results_temporary_lp[year] = {
                 'PV_Size': PV_Size,
@@ -175,7 +175,7 @@ for i in range(len(capacity_costs_list)):
             # Fetch input_df
             input_df = nested_dict[year]
             # Simulate with LP result
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs, "FOB")
             
             # Store the variables in the temporary placeholder dictionary for LP testing results
             testing_results_temporary_lp[year] = {
@@ -225,7 +225,7 @@ for i in range(len(capacity_costs_list)):
             input_df_list_train.append(input_df)
 
         # Run SO function 
-        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = SO.SO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs)
+        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = SO.SO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs, "FOB")
         
         # Store SO training output formally
         training_results[k]["SO"] = {
@@ -254,7 +254,7 @@ for i in range(len(capacity_costs_list)):
             # Fetch input_df
             input_df = nested_dict[year]
             # Simulate with SO result            
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs, "FOB")
             
             # Store the variables in the temporary placeholder dictionary for SO testing results
             testing_results_temporary_so[year] = {
@@ -291,7 +291,7 @@ for i in range(len(capacity_costs_list)):
         # Training
 
         # Run RO function 
-        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = RO.RO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs)
+        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = RO.RO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs, "FOB")
         
         # Store RO training output formally
         training_results[k]["RO"] = {
@@ -320,7 +320,7 @@ for i in range(len(capacity_costs_list)):
             # Fetch input_df
             input_df = nested_dict[year]
             # Simulate with RO result
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs)
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs, "FOB")
              
             # Store the variables in the temporary placeholder dictionary for RO testing results
             testing_results_temporary_ro[year] = {

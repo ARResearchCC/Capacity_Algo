@@ -5,7 +5,7 @@ import pandas as pd
 
 import Input_Parameters
 
-def simulate(input_df, lossofloadcost, capacities, capacity_costs):
+def simulate(input_df, lossofloadcost, capacities, capacity_costs, scenario):
     
     datetime_col = input_df['DateTime']
     δt = (datetime_col.iloc[1] - datetime_col.iloc[0]).total_seconds() / 3600  # Time resolution in hours
@@ -34,7 +34,10 @@ def simulate(input_df, lossofloadcost, capacities, capacity_costs):
     # Constants as parameters
     model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
     model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
-    model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+    if scenario == 'DC':           
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+    else:
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])

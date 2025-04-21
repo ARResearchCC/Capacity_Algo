@@ -50,13 +50,24 @@ Ventilation = 15 # [CFM/PPL] Building Standard
 Ra = 0.06 # [CFM/ft^2] Area Outdoor Air Rate; Source:CEE226E Week 5 - Energy Modeling Questions - Slide 9
 Rp = 5 # [CFM/PPL] People Outdoor Air Rate; Source:CEE226E Week 5 - Energy Modeling Questions - Slide 9   
 
-# Lighting, Plugs, and Occupancy
+# Data Center
+TotalRack = 10
+RackPower = 10.2 * 3 # [kW]
+DataCenterPeakPower = TotalRack * RackPower # [kW]
+
+# Forward Operating Base
 PeakLighting = 0.1 # [KW] Dan's suggestion
 PeakPlugLoad = 0.1 # [KW] Computer = 40W, Phone = 10W, 2*(40 + 10) = 100 [W] = 0.1 [kW]
 MaxOccupancy = 4 # [PPL] 4-MAN Office Room Plan
 PersonLatentHeat = 200; # [BTU/hr/PPL]  CEE226E Slide
 PersonSensibleHeat = 300; # [BTU/hr/PPL]  CEE226E Slide
 TotalPersonHeat = PersonSensibleHeat + PersonLatentHeat # [BTU/hr/PPL]
+
+# Remote Clinic
+Ave_Patient = 5
+FridgePower = 0.15        # [kW]
+VentilatorPower = 0.25    # [kW] per patient
+ITLoad = 0.1              # [kW] Router, laptop, wifi
 
 # Solar PV Parameters
 noct_installed = 45 # [°C] The “installed” nominal operating cell temperature. PVWatts assumes this value to be 45 C for rack-mounted arrays and 49 C for roof mount systems with restricted air flow around the module.
@@ -78,6 +89,7 @@ P_dc0 = 1 # [kW/kW] Rated capacity at standard conditions
 C_IV = 7000          # [$]
 InverterSize = 15    # [kW] Max Continuous AC Output Power
 HPSize = 10          # [kW] default constant electrical power consumption for heat pump
+HPSize_DC = 100      # [kW] default constant electrical power consumption for heat pump for data center
 
 BatteryLoss = 0.01/24# [/hr]
 MaxDischarge = 0.8   # [1]

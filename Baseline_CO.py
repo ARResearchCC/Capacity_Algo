@@ -9,7 +9,7 @@ import Input_Parameters
 The loss of load cost can be defined as the literal penalty of not having any power, not the cost of a diesel generator.
 The paper should be clear about achieving 100% clean energy without any diesel generation backup.
 """
-def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
+def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
     
     datetime_col = input_df['DateTime']
     δt = (datetime_col.iloc[1] - datetime_col.iloc[0]).total_seconds() / 3600  # Time resolution in hours
@@ -38,8 +38,11 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs):
     # Constants as parameters
     model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
     model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
-    model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
-    
+    if scenario == 'DC':           
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+    else:
+        model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])
