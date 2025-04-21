@@ -89,6 +89,10 @@ for i in range(len(scenarios)):
     
     # Get current scenario
     scenario = scenarios[i]
+    if scenario == 'DC':
+        lolc = Input_Parameters.lossofloadcost_DC
+    else:
+        lolc = Input_Parameters.lossofloadcost
 
     # Make a excel workbook file
     output_file = os.path.join(folder_name, f"SA_Scenarios_{scenario}.xlsx")
@@ -118,7 +122,7 @@ for i in range(len(scenarios)):
             # Fetch input_df
             input_df = nested_dict[scenario][year]
             # Run LP function
-            PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Baseline_CO.Cap_Baseline_V1(input_df, Input_Parameters.lossofloadcost, capacity_costs, scenario)
+            PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Baseline_CO.Cap_Baseline_V1(input_df, lolc, capacity_costs, scenario)
             # Store the variables in the temporary placeholder dictionary for LP training results
             training_results_temporary_lp[year] = {
                 'PV_Size': PV_Size,
@@ -170,7 +174,7 @@ for i in range(len(scenarios)):
             # Fetch input_df
             input_df = nested_dict[scenario][year]
             # Simulate with LP result
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs, scenario)
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, lolc, test_capacities, capacity_costs, scenario)
             
             # Store the variables in the temporary placeholder dictionary for LP testing results
             testing_results_temporary_lp[year] = {
@@ -220,7 +224,7 @@ for i in range(len(scenarios)):
             input_df_list_train.append(input_df)
 
         # Run SO function 
-        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = SO.SO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs, scenario)
+        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = SO.SO_training(input_df_list_train, lolc, capacity_costs, scenario)
         
         # Store SO training output formally
         training_results[k]["SO"] = {
@@ -249,7 +253,7 @@ for i in range(len(scenarios)):
             # Fetch input_df
             input_df = nested_dict[scenario][year]
             # Simulate with SO result            
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs, scenario)
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, lolc, test_capacities, capacity_costs, scenario)
             
             # Store the variables in the temporary placeholder dictionary for SO testing results
             testing_results_temporary_so[year] = {
@@ -286,7 +290,7 @@ for i in range(len(scenarios)):
         # Training
 
         # Run RO function 
-        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = RO.RO_training(input_df_list_train, Input_Parameters.lossofloadcost, capacity_costs, scenario)
+        PV_Size, Battery_Size, PCM_Heating_Size, PCM_Cooling_Size, ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = RO.RO_training(input_df_list_train, lolc, capacity_costs, scenario)
         
         # Store RO training output formally
         training_results[k]["RO"] = {
@@ -315,7 +319,7 @@ for i in range(len(scenarios)):
             # Fetch input_df
             input_df = nested_dict[scenario][year]
             # Simulate with RO result
-            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, Input_Parameters.lossofloadcost, test_capacities, capacity_costs, scenario)
+            ObjValue, First_stage_cost, Second_stage_cost, HVAC_Cost, Critical_load_cost = Simulate.simulate(input_df, lolc, test_capacities, capacity_costs, scenario)
              
             # Store the variables in the temporary placeholder dictionary for RO testing results
             testing_results_temporary_ro[year] = {

@@ -181,14 +181,14 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     model.pv_energy_balance = pyo.Constraint(model.S, model.T, rule=pv_energy_balance_rule)
 
     # House overall load balance
-    def house_electricity_rule(m, t):
+    def house_electricity_rule(m, s, t):
         return m.H2HP[s, t] + m.H2C[s, t] == m.PV2H[s, t] * m.η_PVIV + m.B2H[s, t] * m.η + m.G2H[s, t]
-    model.house_electricity = pyo.Constraint(model.T, rule=house_electricity_rule)
+    model.house_electricity = pyo.Constraint(model.S, model.T, rule=house_electricity_rule)
 
     # House electricity load balance
-    def house_crit_electricity_rule(m, t):
+    def house_crit_electricity_rule(m, s, t):
         return m.E_Load_param[s, t] == m.PV2E[s, t] * m.η_PVIV + m.B2E[s, t] * m.η + m.G2E[s, t]
-    model.house_crit_electricity = pyo.Constraint(model.T, rule=house_crit_electricity_rule)
+    model.house_crit_electricity = pyo.Constraint(model.S, model.T, rule=house_crit_electricity_rule)
 
     # Battery storage dynamics for each scenario
     def battery_storage_balance_rule(m, s, t):
