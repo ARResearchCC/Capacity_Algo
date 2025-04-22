@@ -71,6 +71,7 @@ for i in range(len(scenarios)):
 
         # Prepare occupancy and electrical load schedule using for a specific random seed number for a specific year at a specific scenario
         load_sched = Electrical_Load.generate_schedules(scenario, weather_data, random_seed)
+
         
         # Combine all relative input data as input_df, which will be the input of the capacity optimization algorithm
         input_df = Data_Conversion.combine_input_NSRDB(weather_data, load_sched, pv_cf, NetHeatTransfers)

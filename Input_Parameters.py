@@ -86,8 +86,6 @@ P_dc0 = 1 # [kW/kW] Rated capacity at standard conditions
 # Equipments Parameters
      
 # Economic parameters
-C_IV = 7000          # [$]
-InverterSize = 15    # [kW] Max Continuous AC Output Power
 HPSize = 10          # [kW] default constant electrical power consumption for heat pump
 HPSize_DC = 100      # [kW] default constant electrical power consumption for heat pump for data center
 

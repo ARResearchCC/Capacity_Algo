@@ -42,8 +42,6 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     model.hatQ = pyo.Var(within=pyo.NonNegativeReals)  # Worst-case operational cost
     
     # Define master problem parameters
-    model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
-    model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
     if scenario == 'DC':           
         model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
     else:
@@ -68,8 +66,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
         model.C_B * model.BatterySize +
         model.C_HP * model.HPSize +
         model.C_PCM_H * model.PCM_H_Size +
-        model.C_PCM_C * model.PCM_C_Size +
-        model.C_IV
+        model.C_PCM_C * model.PCM_C_Size
     )
     
     fixed_OM_cost = (
@@ -100,8 +97,6 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
         b.Heating_Load = pyo.Param(model.T, initialize={t: scenario_data['Heating_Load'].iloc[t] for t in range(NumTime)})
         
         # Parameters
-        b.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
-        b.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
         if scenario == 'DC':           
             b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
         else:
@@ -212,10 +207,15 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
             return b.δt * (b.B2H[t] + b.B2E[t]) <= b.InStorageBattery[t]
         b.battery_discharge = pyo.Constraint(model.T, rule=battery_discharge_rule)
         
-        # Inverter capacity constraint
-        def battery_inverter_rule(b, t):
-            return b.B2H[t] + b.PV2B[t] + b.B2E[t] <= b.InverterSize
-        b.battery_inverter = pyo.Constraint(model.T, rule=battery_inverter_rule)
+        # Battery charging power constraint
+        def battery_charging_power_rule(b, t):
+            return b.PV2B[t] <= model.BatterySize * 0.25
+        b.battery_charging_power = pyo.Constraint(model.T, rule=battery_charging_power_rule)
+
+        # Battery discharging power constraint
+        def battery_discharging_power_rule(b, t):
+            return b.B2H[t] + b.B2E[t] <= model.BatterySize * 0.25
+        b.battery_discharging_power = pyo.Constraint(model.T, rule=battery_discharging_power_rule)
         
         # Battery size constraint
         def battery_size_rule(b, t):
@@ -388,8 +388,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
                 prev_caps['PCM_H'] * Input_Parameters.C_PCM_H * Input_Parameters.CRF + 
                 prev_caps['PCM_H'] * Input_Parameters.C_PCM_H_OP +
                 prev_caps['PCM_C'] * Input_Parameters.C_PCM_C * Input_Parameters.CRF + 
-                prev_caps['PCM_C'] * Input_Parameters.C_PCM_C_OP +
-                Input_Parameters.C_IV * Input_Parameters.CRF)*(NumTime/8760)
+                prev_caps['PCM_C'] * Input_Parameters.C_PCM_C_OP)*(NumTime/8760)
             )
             
             current_UB = first_stage_val + worst_cost
@@ -486,8 +485,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
         Input_Parameters.C_B * Battery_Size +
         Input_Parameters.C_HP * Input_Parameters.HPSize +
         Input_Parameters.C_PCM_H * PCM_Heating_Size +
-        Input_Parameters.C_PCM_C * PCM_Cooling_Size +
-        Input_Parameters.C_IV
+        Input_Parameters.C_PCM_C * PCM_Cooling_Size
     )
     
     om_cost = (

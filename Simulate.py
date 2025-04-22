@@ -32,8 +32,6 @@ def simulate(input_df, lossofloadcost, capacities, capacity_costs, scenario):
     model.Heating_Load = pyo.Param(model.T, initialize=lambda m, t: Heating_Load[t])
 
     # Constants as parameters
-    model.C_IV = pyo.Param(initialize=Input_Parameters.C_IV)
-    model.InverterSize = pyo.Param(initialize=Input_Parameters.InverterSize)
     if scenario == 'DC':           
         model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
     else:
@@ -95,14 +93,13 @@ def simulate(input_df, lossofloadcost, capacities, capacity_costs, scenario):
     model.InStoragePCM_C = pyo.Var(model.T, within=pyo.NonNegativeReals)
 
     # Objective Function
-    # Total levelized capacity + fixed yearly operation & maintainence cost of the system (PV, electrochemical battery, 2 HPs (heating and cooling), Inverter, PCM H and C storages)
+    # Total levelized capacity + fixed yearly operation & maintainence cost of the system (PV, electrochemical battery, 2 HPs (heating and cooling), PCM H and C storages)
     capital_cost = (
         model.C_PV * model.PVSize +
         model.C_B * model.BatterySize +
         model.C_HP * model.HPSize +
         model.C_PCM_H * model.PCM_H_Size +
-        model.C_PCM_C * model.PCM_C_Size +
-        model.C_IV
+        model.C_PCM_C * model.PCM_C_Size
     )
 
     fixed_OM_cost = (
@@ -170,10 +167,15 @@ def simulate(input_df, lossofloadcost, capacities, capacity_costs, scenario):
         return m.δt * (m.B2H[t] + m.B2E[t]) <= m.InStorageBattery[t]
     model.battery_discharge = pyo.Constraint(model.T, rule=battery_discharge_rule)
 
-    # Inverter capacity constraint
-    def battery_inverter_rule(m, t):
-        return m.B2H[t] + m.B2E[t] + m.PV2B[t] <= m.InverterSize
-    model.battery_inverter = pyo.Constraint(model.T, rule=battery_inverter_rule)
+    # Battery charging power constraint
+    def battery_charging_power_rule(m, t):
+        return m.PV2B[t] <= m.BatterySize * 0.25
+    model.battery_charging_power = pyo.Constraint(model.T, rule=battery_charging_power_rule)
+
+    # Battery discharging power constraint
+    def battery_discharging_power_rule(m, t):
+        return m.B2H[t] + m.B2E[t] <= m.BatterySize * 0.25
+    model.battery_discharging_power = pyo.Constraint(model.T, rule=battery_discharging_power_rule)
 
     # Battery size constraint
     def battery_size_rule(m, t):
