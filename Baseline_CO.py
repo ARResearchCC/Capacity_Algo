@@ -97,22 +97,6 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
     model.InStoragePCM_H = pyo.Var(model.T, within=pyo.NonNegativeReals)
     model.InStoragePCM_C = pyo.Var(model.T, within=pyo.NonNegativeReals)
 
-    '''
-    # Define expressions
-    model.H_score = Expression(model.T)  # Heating score expression
-    model.C_score = Expression(model.T)  # Cooling score expression
-    model.E_score = Expression(model.T)  # Electric load score expression
-
-    # These should be linear expressions since Heating_Load, Cooling_Load, and E_Load are inputs, although InStorage variables are all second stage decision variables.
-    # The worst case scenario for each load (heating, cooling, and electrical) happens when the respective score is the lowest (always positive)
-    for t in model.T:
-        model.H_score[t] = model.InStoragePCM_H[t] / model.Heating_Load[t]
-        model.C_score[t] = model.InStoragePCM_C[t] / model.Cooling_Load[t]
-        model.E_score[t] = model.InStorageBattery[t] / model.E_Load[t]
-    
-    # Worst case: Highest H_score, C_score, and E_score, and lowest PV production
-    '''
-
     # Objective Function
     # Total levelized capacity + fixed yearly operation & maintainence cost of the system (PV, electrochemical battery, 2 HPs (heating and cooling), PCM H and C storages)
     capital_cost = (
@@ -146,34 +130,10 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
 
     # Constraints
 
-    def HVAC_load_balance_rule(m, t):
-        net_thermal_load = m.HP2H[t] - m.C2H[t] + m.PCM_H2H[t] - m.PCM_C2H[t] # [kW] total active heat gain
-        return (m.Cooling_Load[t] - m.Heating_Load[t] + net_thermal_load == 0)
-    model.HVAC_load_balance = pyo.Constraint(model.T, rule=HVAC_load_balance_rule)
-
-    # Battery storage initialization and termination
-    def battery_init_rule(m):
-        return m.InStorageBattery[0] == m.Intial_B_SOC * m.BatterySize
-    model.battery_init = pyo.Constraint(rule=battery_init_rule)
-
-    def battery_term_rule(m):
-        return m.InStorageBattery[m.NumTime - 1] == m.Intial_B_SOC * m.BatterySize
-    model.battery_term = pyo.Constraint(rule=battery_term_rule)
-
     # PV energy balance
     def pv_energy_balance_rule(m, t):
         return m.PV[t] * m.PVSize == m.PV2B[t] + m.PV2H[t] + m.PV2G[t] + m.PV2E[t]
     model.pv_energy_balance = pyo.Constraint(model.T, rule=pv_energy_balance_rule)
-
-    # House overall load balance
-    def house_electricity_rule(m, t):
-        return m.H2HP[t] + m.H2C[t] == m.PV2H[t] * m.η_PVIV + m.B2H[t] * m.η + m.G2H[t]
-    model.house_electricity = pyo.Constraint(model.T, rule=house_electricity_rule)
-
-    # House electricity load balance
-    def house_crit_electricity_rule(m, t):
-        return m.E_Load[t] == m.PV2E[t] * m.η_PVIV + m.B2E[t] * m.η + m.G2E[t]
-    model.house_crit_electricity = pyo.Constraint(model.T, rule=house_crit_electricity_rule)
 
     # Battery storage dynamics
     def battery_storage_balance_rule(m, t):
@@ -182,46 +142,6 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
         else:
             return pyo.Constraint.Skip
     model.battery_storage_balance = pyo.Constraint(model.T, rule=battery_storage_balance_rule)
-
-    # Battery discharge constraint
-    def battery_discharge_rule(m, t):
-        return m.δt * (m.B2H[t] + m.B2E[t]) <= m.InStorageBattery[t]
-    model.battery_discharge = pyo.Constraint(model.T, rule=battery_discharge_rule)
-
-    # Battery charging power constraint
-    def battery_charging_power_rule(m, t):
-        return m.PV2B[t] <= m.BatterySize * 0.25
-    model.battery_charging_power = pyo.Constraint(model.T, rule=battery_charging_power_rule)
-
-    # Battery discharging power constraint
-    def battery_discharging_power_rule(m, t):
-        return m.B2H[t] + m.B2E[t] <= m.BatterySize * 0.25
-    model.battery_discharging_power = pyo.Constraint(model.T, rule=battery_discharging_power_rule)
-
-    # Battery size constraint
-    def battery_size_rule(m, t):
-        return m.InStorageBattery[t] <= m.BatterySize
-    model.battery_size = pyo.Constraint(model.T, rule=battery_size_rule)
-
-    # Battery max discharge constraint
-    def battery_max_discharge_rule(m, t):
-        return m.InStorageBattery[t] >= m.BatterySize * (1 - m.MaxDischarge)
-    model.battery_max_discharge = pyo.Constraint(model.T, rule=battery_max_discharge_rule)
-
-    # Heating power balance
-    def heating_power_balance_rule(m, t):
-        return m.H2HP[t] == (m.HP2PCM_H[t] + m.HP2H[t]) / m.COP_H
-    model.heating_power_balance = pyo.Constraint(model.T, rule=heating_power_balance_rule)
-
-    # Cooling power balance
-    def cooling_power_balance_rule(m, t):
-        return m.H2C[t] == (m.C2PCM_C[t] + m.C2H[t]) / m.COP_C
-    model.cooling_power_balance = pyo.Constraint(model.T, rule=cooling_power_balance_rule)
-
-    # Heat pump heating and cooling capacity constraint
-    def heat_pump_heating_capacity_rule(m, t):
-        return m.H2HP[t] + m.H2C[t] <= m.HPSize
-    model.heat_pump_heating_capacity = pyo.Constraint(model.T, rule=heat_pump_heating_capacity_rule)
 
     # PCM heating storage dynamics
     def pcm_h_storage_balance_rule(m, t):
@@ -238,6 +158,87 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
         else:
             return pyo.Constraint.Skip
     model.pcm_c_storage_balance = pyo.Constraint(model.T, rule=pcm_c_storage_balance_rule)
+
+    # House overall load balance
+    def house_electricity_rule(m, t):
+        return m.H2HP[t] + m.H2C[t] == m.PV2H[t] * m.η_PVIV + m.B2H[t] * m.η + m.G2H[t]
+    model.house_electricity = pyo.Constraint(model.T, rule=house_electricity_rule)
+
+    # House electricity load balance
+    def house_crit_electricity_rule(m, t):
+        return m.E_Load[t] == m.PV2E[t] * m.η_PVIV + m.B2E[t] * m.η + m.G2E[t]
+    model.house_crit_electricity = pyo.Constraint(model.T, rule=house_crit_electricity_rule)
+
+    def HVAC_load_balance_rule(m, t):
+        net_thermal_load = m.HP2H[t] - m.C2H[t] + m.PCM_H2H[t] - m.PCM_C2H[t] # [kW] total active heat gain
+        return (m.Cooling_Load[t] - m.Heating_Load[t] + net_thermal_load == 0)
+    model.HVAC_load_balance = pyo.Constraint(model.T, rule=HVAC_load_balance_rule)
+
+    # Heating power balance
+    def heating_power_balance_rule(m, t):
+        return m.H2HP[t] == (m.HP2PCM_H[t] + m.HP2H[t]) / m.COP_H
+    model.heating_power_balance = pyo.Constraint(model.T, rule=heating_power_balance_rule)
+
+    # Cooling power balance
+    def cooling_power_balance_rule(m, t):
+        return m.H2C[t] == (m.C2PCM_C[t] + m.C2H[t]) / m.COP_C
+    model.cooling_power_balance = pyo.Constraint(model.T, rule=cooling_power_balance_rule)
+
+    # Heat pump heating and cooling capacity constraint
+    def heat_pump_heating_capacity_rule(m, t):
+        return m.H2HP[t] + m.H2C[t] <= m.HPSize
+    model.heat_pump_heating_capacity = pyo.Constraint(model.T, rule=heat_pump_heating_capacity_rule)
+
+    # PCM heating initialization and termination
+    def pcm_h_init_rule(m):
+        return m.InStoragePCM_H[0] == m.Intial_PCM_H_SOC * m.PCM_H_Size
+    model.pcm_h_init = pyo.Constraint(rule=pcm_h_init_rule)
+
+    def pcm_c_init_rule(m):
+        return m.InStoragePCM_C[0] == m.Intial_PCM_C_SOC * m.PCM_C_Size
+    model.pcm_c_init = pyo.Constraint(rule=pcm_c_init_rule)
+
+    def pcm_h_term_rule(m):
+        return m.InStoragePCM_H[m.NumTime - 1] == m.Intial_PCM_H_SOC * m.PCM_H_Size
+    model.pcm_h_term = pyo.Constraint(rule=pcm_h_term_rule)
+
+    def pcm_c_term_rule(m):
+        return m.InStoragePCM_C[m.NumTime - 1] == m.Intial_PCM_C_SOC * m.PCM_C_Size
+    model.pcm_c_term = pyo.Constraint(rule=pcm_c_term_rule)
+
+    # Battery storage initialization and termination
+    def battery_init_rule(m):
+        return m.InStorageBattery[0] == m.Intial_B_SOC * m.BatterySize
+    model.battery_init = pyo.Constraint(rule=battery_init_rule)
+
+    def battery_term_rule(m):
+        return m.InStorageBattery[m.NumTime - 1] == m.Intial_B_SOC * m.BatterySize
+    model.battery_term = pyo.Constraint(rule=battery_term_rule)
+
+    # Battery discharge constraint
+    def battery_discharge_rule(m, t):
+        return m.δt * (m.B2H[t] + m.B2E[t]) <= m.InStorageBattery[t]
+    model.battery_discharge = pyo.Constraint(model.T, rule=battery_discharge_rule)
+    
+    # Battery size constraint
+    def battery_size_rule(m, t):
+        return m.InStorageBattery[t] <= m.BatterySize
+    model.battery_size = pyo.Constraint(model.T, rule=battery_size_rule)
+
+    # Battery charging power constraint
+    def battery_charging_power_rule(m, t):
+        return m.PV2B[t] <= m.BatterySize * 0.25
+    model.battery_charging_power = pyo.Constraint(model.T, rule=battery_charging_power_rule)
+
+    # Battery discharging power constraint
+    def battery_discharging_power_rule(m, t):
+        return m.B2H[t] + m.B2E[t] <= m.BatterySize * 0.25
+    model.battery_discharging_power = pyo.Constraint(model.T, rule=battery_discharging_power_rule)
+
+    # Battery max discharge constraint
+    def battery_max_discharge_rule(m, t):
+        return m.InStorageBattery[t] >= m.BatterySize * (1 - m.MaxDischarge)
+    model.battery_max_discharge = pyo.Constraint(model.T, rule=battery_max_discharge_rule)
 
     # PCM heating discharge constraint
     def pcm_h_discharge_rule(m, t):
@@ -258,23 +259,6 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
     def pcm_c_size_rule(m, t):
         return m.InStoragePCM_C[t] <= m.PCM_C_Size
     model.pcm_c_size = pyo.Constraint(model.T, rule=pcm_c_size_rule)
-
-    # PCM heating initialization and termination
-    def pcm_h_init_rule(m):
-        return m.InStoragePCM_H[0] == m.Intial_PCM_H_SOC * m.PCM_H_Size
-    model.pcm_h_init = pyo.Constraint(rule=pcm_h_init_rule)
-
-    def pcm_c_init_rule(m):
-        return m.InStoragePCM_C[0] == m.Intial_PCM_C_SOC * m.PCM_C_Size
-    model.pcm_c_init = pyo.Constraint(rule=pcm_c_init_rule)
-
-    def pcm_h_term_rule(m):
-        return m.InStoragePCM_H[m.NumTime - 1] == m.Intial_PCM_H_SOC * m.PCM_H_Size
-    model.pcm_h_term = pyo.Constraint(rule=pcm_h_term_rule)
-
-    def pcm_c_term_rule(m):
-        return m.InStoragePCM_C[m.NumTime - 1] == m.Intial_PCM_C_SOC * m.PCM_C_Size
-    model.pcm_c_term = pyo.Constraint(rule=pcm_c_term_rule)
 
     # Solve the model
     solver = pyo.SolverFactory('gurobi')  # Ensure Gurobi is installed or use another LP solver
