@@ -310,6 +310,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
         
         solver = pyo.SolverFactory('gurobi')
         solver.options['MIPGap'] = 1e-3
+        solver.options['Threads'] = 4 
         # solver.options['NumericFocus'] = 3  # Higher focus on numerical accuracy
         
         # Algorithm parameters

@@ -262,6 +262,7 @@ def Cap_Baseline_V1(input_df, lossofloadcost, capacity_costs, scenario):
 
     # Solve the model
     solver = pyo.SolverFactory('gurobi')  # Ensure Gurobi is installed or use another LP solver
+    solver.options['Threads'] = 4
     results = solver.solve(model, tee=True)  # tee=True for verbose output
 
     # Check if the solution is optimal
