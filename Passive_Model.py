@@ -16,7 +16,7 @@ bounds = {
 
 def passive_model(file_path, df, Ti_constant, lat, conversion_setting=1):
     # Load the Excel file
-    dfs = pd.read_excel(file_path, sheet_name=None)
+    dfs = pd.read_excel(file_path, sheet_name=None, engine="openpyxl")
     
     SHGCs = dfs["Tuned Parameters"]["_SHGC_"]
     RCCs_day = dfs["Tuned Parameters"]["_RCC_day_"]
