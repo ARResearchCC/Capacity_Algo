@@ -19,7 +19,8 @@ from pathlib import Path
 data_dir = "Data"
 # locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
 location = ["HalfMoonBay"]
-scenarios = ["FOB", "RC", "DC"]
+# scenarios = ["FOB", "RC", "DC"]
+scenarios = ["DC"]
 algorithms = ["LP", "SO", "RO"]
 
 fold = 5 # testing data is 1998-2002, 2003-2007...
