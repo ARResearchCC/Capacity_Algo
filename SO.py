@@ -46,8 +46,11 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     # Constants as parameters
     if scenario == 'DC':           
         model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+        model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost_DC)
     else:
         model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+        model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
+
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])
@@ -66,7 +69,7 @@ def SO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     model.d = pyo.Param(initialize=Input_Parameters.d)
     model.CRF = pyo.Param(initialize=Input_Parameters.CRF)
     model.δt = pyo.Param(initialize=δt)
-    model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
+
     model.lossofloadcost = pyo.Param(initialize=lossofloadcost)
     model.η_PVIV = pyo.Param(initialize=0.94)
     model.Intial_B_SOC = pyo.Param(initialize=Input_Parameters.Intial_B_SOC)

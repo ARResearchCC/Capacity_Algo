@@ -19,7 +19,7 @@ from pathlib import Path
 data_dir = "Data"
 # locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
 location = ["HalfMoonBay"]
-scenarios = ["FOB", "DC", "RC"]
+scenarios = ["FOB", "RC", "DC"]
 algorithms = ["LP", "SO", "RO"]
 
 fold = 5 # testing data is 1998-2002, 2003-2007...
@@ -47,28 +47,29 @@ lats, lons, timezones = Data_Conversion.get_timezones(data_dir, location)
 nested_dict = {scenario: {year: {} for year in weather_year_list} for scenario in scenarios}
 
 # Get all input data for each of the 25 years
-for i in range(len(scenarios)):
-    for j in range(len(weather_year_list)):
+for j in range(len(weather_year_list)):
+    
+    year = weather_year_list[j]
+        
+    # Get a unique random seed number
+    random_seed = random_seeds[j]
 
+    # Read NSRDB weather data of the given location of the given year
+    # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
+    NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year)
+    
+    # Prepare weather data file using NSRDB data
+    weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[0], lons[0], timezones[0])
+
+    # Prepare heating and cooling load using weather data and passive model
+    NetHeatTransfers = Passive_Model.passive_model(Input_Parameters.calibration_file_path, weather_data, Input_Parameters.T_indoor_constant, lats[0])
+
+    # Prepare solar PV capacity factor using weather data
+    pv_cf = Solar_Generation.generate_pv(weather_data, lats[0])
+    
+    for i in range(len(scenarios)):
+        
         scenario = scenarios[i]
-        year = weather_year_list[j]
-        
-        # Get a unique random seed number
-        random_seed = random_seeds[j]
-
-        # Read NSRDB weather data of the given location of the given year
-        # NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location, year).head(24)
-        NSRDB_raw_weather = Data_Conversion.read_NSRDB(data_dir, location[0], year)
-        
-        # Prepare weather data file using NSRDB data
-        weather_data = Data_Conversion.prepare_NSRDB(NSRDB_raw_weather, lats[0], lons[0], timezones[0])
-
-        # Prepare heating and cooling load using weather data and passive model
-        NetHeatTransfers = Passive_Model.passive_model(Input_Parameters.calibration_file_path, weather_data, Input_Parameters.T_indoor_constant, lats[0])
-
-        # Prepare solar PV capacity factor using weather data
-        pv_cf = Solar_Generation.generate_pv(weather_data, lats[0])
-
         # Prepare occupancy and electrical load schedule using for a specific random seed number for a specific year at a specific scenario
         load_sched = Electrical_Load.generate_schedules(scenario, weather_data, random_seed)
 
@@ -78,7 +79,6 @@ for i in range(len(scenarios)):
         
         # Add input_df to list
         nested_dict[scenario][year] = input_df
-
 
 # Define folder name
 folder_name = "SA_Scenarios"
@@ -90,8 +90,13 @@ for i in range(len(scenarios)):
     
     # Get current scenario
     scenario = scenarios[i]
+
+    print("current scenario")
+    print(scenario)
+
     if scenario == 'DC':
         lolc = Input_Parameters.lossofloadcost_DC
+        print(lolc)
     else:
         lolc = Input_Parameters.lossofloadcost
 

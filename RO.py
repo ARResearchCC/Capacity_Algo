@@ -44,8 +44,11 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     # Define master problem parameters
     if scenario == 'DC':           
         model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+        model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost_DC)
     else:
         model.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+        model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
+    
     model.C_PV = pyo.Param(initialize=capacity_costs[0])
     model.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
     model.C_B = pyo.Param(initialize=capacity_costs[2])
@@ -58,7 +61,7 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     model.C_PCM_C_OP = pyo.Param(initialize=Input_Parameters.C_PCM_C_OP)
     model.d = pyo.Param(initialize=Input_Parameters.d)
     model.CRF = pyo.Param(initialize=Input_Parameters.CRF)
-    model.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
+
     
     # First-stage costs (capital + fixed O&M)
     capital_cost = (
@@ -98,9 +101,12 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
         
         # Parameters
         if scenario == 'DC':           
-            b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC)
+            b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize_DC) 
+            b.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost_DC)
         else:
             b.HPSize = pyo.Param(initialize=Input_Parameters.HPSize)
+            b.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
+        
         b.C_PV = pyo.Param(initialize=capacity_costs[0])
         b.C_PV_OP = pyo.Param(initialize=capacity_costs[1])
         b.C_B = pyo.Param(initialize=capacity_costs[2])
@@ -120,7 +126,6 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
         b.CRF = pyo.Param(initialize=Input_Parameters.CRF)
         b.δt = pyo.Param(initialize=δt)
         b.lossofloadcost = pyo.Param(initialize=lossofloadcost)
-        b.HVAC_lol_cost = pyo.Param(initialize=Input_Parameters.HVAC_lol_cost)
         b.η_PVIV = pyo.Param(initialize=0.94)
         b.Intial_B_SOC = pyo.Param(initialize=Input_Parameters.Intial_B_SOC)
         b.Intial_PCM_C_SOC = pyo.Param(initialize=Input_Parameters.Intial_PCM_C_SOC)

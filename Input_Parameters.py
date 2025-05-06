@@ -97,14 +97,14 @@ C_PV = 1500          # [$/kW]
 C_PV_OP = 15         # [$/kW/yr]
 C_B = 500            # [$/kWh]
 C_B_OP = 5           # [$/kWh/yr]
-C_HP = 1000         # [$/kW]
+C_HP = 1000          # [$/kW]
 C_HP_OP = 0.02 * C_HP # [$/yr]
-C_PCM_H = 70        # [$/kWh]
+C_PCM_H = 70         # [$/kWh]
 C_PCM_H_OP = 0.04 * C_PCM_H # [$/kWh/yr]
-C_PCM_C = 70        # [$/kWh]
+C_PCM_C = 70         # [$/kWh]
 C_PCM_C_OP = 0.04 * C_PCM_C # [$/kWh/yr]
 
-C_PV_low = 500          # [$/kW]
+C_PV_low = 500           # [$/kW]
 C_PV_OP_low = 10         # [$/kW/yr]
 C_B_low = 250            # [$/kWh]
 C_B_OP_low = 0           # [$/kWh/yr]
@@ -119,5 +119,6 @@ COP_H = 3.5           # COP heating
 COP_C = 3.5           # COP cooling
 
 HVAC_lol_cost = 3  # [$/kWh] loss of load cost due to thermal comfort (residential loss of load value)
+HVAC_lol_cost_DC = 10  # [$/kWh] loss of load cost due to thermal comfort and computing for DC (residential loss of load value)
 lossofloadcost_DC = 30 # [$/kWh] loss of load penalty for critical electrical load for DC (large C&I)
 lossofloadcost = 300 # [$/kWh] loss of load penalty for critical electrical load for FOB & RC (small C&I)
