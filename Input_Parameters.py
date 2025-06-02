@@ -70,18 +70,22 @@ VentilatorPower = 0.25    # [kW] per patient
 ITLoad = 0.1              # [kW] Router, laptop, wifi
 
 # Solar PV Parameters
-noct_installed = 45 # [°C] The “installed” nominal operating cell temperature. PVWatts assumes this value to be 45 C for rack-mounted arrays and 49 C for roof mount systems with restricted air flow around the module.
-module_height = 5 # [m] The height above ground of the center of the module. The PVWatts default is 5.0.
-module_width = 0.31579 # [m] Module width. The default value of 0.31579 meters in combination with the default module_length gives a hydraulic diameter of 0.5.
-module_length = 1.2 # [m] Module length. The default value of 1.2 meters in combination with the default module_width gives a hydraulic diameter of 0.5.
-module_emissivity = 0.84 # [1] The effectiveness of the module at radiating thermal energy.
-module_absorption = 0.83 # [1] The fraction of incident irradiance that is converted to thermal energy in the module. 
-module_surface_tilt = 27 # [DEGREES] Module tilt from horizontal. If not provided, the default value of 30 degrees is used.
-Γ_t = -0.47/100 # [1/°C] Temperature coefficient for standard module
-T_ref = 25 # [°C] Reference cell temperature
-η_PV = 0.86 # [1] PV DC efficiency after system loss
-P_dc0 = 1 # [kW/kW] Rated capacity at standard conditions
-η_PVIV = 0.94 # [1] PV(DC) to Home(AC) inverter efficiency
+# Temperature model parameters
+noct_installed = 45  # Nominal Operating Cell Temperature [°C]
+module_height = 1.0   # Module height above ground [m]
+wind_height = 10.0    # Wind speed measurement height [m]
+module_emissivity = 0.84
+module_absorption = 0.83
+module_surface_tilt = 30  # [degrees]
+module_width = 1.0    # [m]
+module_length = 1.6   # [m]
+
+# PV performance parameters
+optical_loss = 0.96   # Account for glass reflectance
+P_dc0 = 1.0           # DC power at STC [kW/kWp]
+Γ_t = -0.004          # Temperature coefficient [1/°C]
+T_ref = 25            # Reference temperature [°C]
+η_PV = 0.96           # System efficiency factor
 
 # Equipments Parameters
      

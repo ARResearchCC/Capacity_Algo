@@ -17,8 +17,8 @@ from pathlib import Path
 
 # Define the base data directory, list of locations, and the weather year.
 data_dir = "Data"
-# locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
-location = ["HalfMoonBay"]
+# locations = ["California", "Arizona", "Alaska", "Minnesota", "Florida"]
+location = ["California"]
 scenarios = ["FOB", "DC", "RC"]
 algorithms = ["LP", "SO", "RO"]
 

@@ -17,8 +17,8 @@ from pathlib import Path
 
 # Define the base data directory, list of locations, and the weather year.
 data_dir = "Data"
-locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
-# locations = ["HalfMoonBay"]
+locations = ["California", "Arizona", "Alaska", "Minnesota", "Florida"]
+# locations = ["California"]
 scenarios = ["FOB", "DC", "RC"]
 algorithms = ["LP", "SO", "RO"]
 fold = 5 # testing data is 1998-2002, 2003-2007...

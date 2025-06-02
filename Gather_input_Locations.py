@@ -12,8 +12,8 @@ from pathlib import Path
 
 # Define the base data directory, list of locations, and the weather year.
 data_dir = "Data"
-locations = ["HalfMoonBay", "Arizona", "Alaska", "Minnesota", "Florida"]
-# locations = ["HalfMoonBay"]
+locations = ["California", "Arizona", "Alaska", "Minnesota", "Florida"]
+# locations = ["California"]
 scenarios = ["FOB", "DC", "RC"]
 
 # Define which columns to sum and which to average
