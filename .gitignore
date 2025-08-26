@@ -2,4 +2,5 @@ __pycache__/
 capa_algo/
 venvCap/
 _pycache_/
-
+_pycache_\
+.png

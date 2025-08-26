@@ -385,10 +385,10 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
             
             # Calculate upper bound for current solution
             first_stage_val = (
-                (prev_caps['PV'] * Input_Parameters.C_PV * Input_Parameters.CRF + 
-                prev_caps['PV'] * Input_Parameters.C_PV_OP +
-                prev_caps['Battery'] * Input_Parameters.C_B * Input_Parameters.CRF + 
-                prev_caps['Battery'] * Input_Parameters.C_B_OP +
+                (prev_caps['PV'] * capacity_costs[0] * Input_Parameters.CRF + 
+                prev_caps['PV'] * capacity_costs[1] +
+                prev_caps['Battery'] * capacity_costs[2] * Input_Parameters.CRF + 
+                prev_caps['Battery'] * capacity_costs[3] +
                 Input_Parameters.HPSize * Input_Parameters.C_HP * Input_Parameters.CRF + 
                 Input_Parameters.HPSize * Input_Parameters.C_HP_OP +
                 prev_caps['PCM_H'] * Input_Parameters.C_PCM_H * Input_Parameters.CRF + 
@@ -487,16 +487,16 @@ def RO_training(input_df_list, lossofloadcost, capacity_costs, scenario):
     
     # Calculate first-stage cost
     cap_cost = (
-        Input_Parameters.C_PV * PV_Size +
-        Input_Parameters.C_B * Battery_Size +
+        capacity_costs[0] * PV_Size +
+        capacity_costs[2] * Battery_Size +
         Input_Parameters.C_HP * Input_Parameters.HPSize +
         Input_Parameters.C_PCM_H * PCM_Heating_Size +
         Input_Parameters.C_PCM_C * PCM_Cooling_Size
     )
     
     om_cost = (
-        Input_Parameters.C_PV_OP * PV_Size +
-        Input_Parameters.C_B_OP * Battery_Size +
+        capacity_costs[1] * PV_Size +
+        capacity_costs[3] * Battery_Size +
         Input_Parameters.C_HP_OP * Input_Parameters.HPSize +
         Input_Parameters.C_PCM_H_OP * PCM_Heating_Size +
         Input_Parameters.C_PCM_C_OP * PCM_Cooling_Size
