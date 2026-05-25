@@ -5,6 +5,45 @@ import pandas as pd
 
 import Input_Parameters
 
+LOL_TOLERANCE_KW = 1e-6
+
+
+def loss_of_load_metrics(power_kw, timestep_hours, tolerance=LOL_TOLERANCE_KW):
+    """
+    Reliability metrics from a loss-of-load power time series (kW).
+
+    A timestep counts as loss of load when power > tolerance. Contiguous active
+    timesteps form one loss-of-load event.
+
+    Returns
+    -------
+    lol_hours : float
+        Total hours with loss of load.
+    num_events : int
+        Number of contiguous loss-of-load events.
+    max_event_hours : float
+        Duration of the longest event (hours).
+    """
+    power = np.asarray(power_kw, dtype=float)
+    active = power > tolerance
+    lol_hours = float(np.sum(active) * timestep_hours)
+
+    if not np.any(active):
+        return 0.0, 0, 0.0
+
+    changes = np.diff(active.astype(np.int8))
+    starts = np.where(changes == 1)[0] + 1
+    ends = np.where(changes == -1)[0] + 1
+
+    if active[0]:
+        starts = np.insert(starts, 0, 0)
+    if active[-1]:
+        ends = np.append(ends, len(active))
+
+    event_lengths_h = (ends - starts) * timestep_hours
+    return lol_hours, int(len(event_lengths_h)), float(np.max(event_lengths_h))
+
+
 def simulate(input_df, lossofloadcost, capacities, capacity_costs, scenario):
     
     datetime_col = input_df['DateTime']
@@ -273,4 +312,27 @@ def simulate(input_df, lossofloadcost, capacities, capacity_costs, scenario):
     First_stage_cost = round(pyo.value(first_stage_cost), 3)
     Total_Cost = ObjValue + First_stage_cost
 
-    return Total_Cost, First_stage_cost, ObjValue, round(pyo.value(HVAC_cost), 3), round(pyo.value(critical_load_cost), 3)
+    dt = float(pyo.value(model.δt))
+    g2h = np.array([pyo.value(model.G2H[t]) for t in model.T])
+    g2e = np.array([pyo.value(model.G2E[t]) for t in model.T])
+
+    hvac_lol_hours, hvac_lol_events, hvac_max_lol_event_h = loss_of_load_metrics(
+        g2h, dt
+    )
+    crit_lol_hours, crit_lol_events, crit_max_lol_event_h = loss_of_load_metrics(
+        g2e, dt
+    )
+
+    return (
+        Total_Cost,
+        First_stage_cost,
+        ObjValue,
+        round(pyo.value(HVAC_cost), 3),
+        round(pyo.value(critical_load_cost), 3),
+        round(hvac_lol_hours, 3),
+        round(crit_lol_hours, 3),
+        hvac_lol_events,
+        crit_lol_events,
+        round(hvac_max_lol_event_h, 3),
+        round(crit_max_lol_event_h, 3),
+    )

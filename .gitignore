@@ -1,6 +1,16 @@
+# Python
 __pycache__/
-capa_algo/
-venvCap/
+*.py[cod]
+*$py.class
 _pycache_/
-_pycache_\
-.png
+
+# Data & results
+*.csv
+*.xlsx
+
+# Figures
+*.png
+
+# Local environments / project folders
+venvCap/
+capa_algo/

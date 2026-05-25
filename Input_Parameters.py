@@ -126,3 +126,7 @@ HVAC_lol_cost = 3  # [$/kWh] loss of load cost due to thermal comfort (residenti
 HVAC_lol_cost_DC = 10  # [$/kWh] loss of load cost due to thermal comfort and computing for DC (residential loss of load value)
 lossofloadcost_DC = 30 # [$/kWh] loss of load penalty for critical electrical load for DC (large C&I)
 lossofloadcost = 300 # [$/kWh] loss of load penalty for critical electrical load for FOB & RC (small C&I)
+
+# CVaR stochastic optimization (SO_CVaR.py)
+CVaR_alpha = 0.9   # confidence level; CVaR is the mean outage cost in the worst (1-alpha) tail of training years
+CVaR_lambda = 1.0  # weight on CVaR vs expected outage cost in second stage (0 = SO, 1 = pure CVaR)
