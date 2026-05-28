@@ -1,0 +1,39 @@
+# Capacity_Algo - Python dependencies (pinned for reproducible installs)
+#
+# Tested with: Python 3.11.x (3.10-3.12 should work)
+#
+# Quick start (Windows PowerShell, from this folder):
+#   py -3 -m venv .venv
+#   .\.venv\Scripts\Activate.ps1
+#   python -m pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# Quick start (macOS / Linux):
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   python -m pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# Gurobi: gurobipy installs from PyPI, but you still need a valid Gurobi license
+# (academic or commercial) for FOB.py / DC.py / SO / RO / Baseline_CO solvers.
+
+# --- Core scientific stack ---
+numpy==1.26.4
+pandas==2.2.3
+openpyxl==3.1.5
+
+# --- Optimization (Pyomo + Gurobi solver interface) ---
+pyomo==6.8.2
+gurobipy==11.0.3
+
+# --- Solar / weather / time ---
+pvlib==0.11.2
+pysolar==0.11
+pytz==2024.2
+
+# --- Notebooks and plotting (Plots.ipynb, Collect_Result.ipynb, test_pv.ipynb) ---
+matplotlib==3.9.2
+seaborn==0.13.2
+tabulate==0.9.0
+statsmodels==0.14.4
+jupyter==1.1.1
