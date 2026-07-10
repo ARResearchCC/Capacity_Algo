@@ -13,7 +13,11 @@ _pycache_/
 
 # Local environments / project folders
 .venv/
+.venv.lock
 venv/
 venvCap/
 capa_algo/
 .venv_verify/
+
+# Sherlock job logs
+logs/

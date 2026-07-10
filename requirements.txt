@@ -16,6 +16,9 @@
 #
 # Gurobi: gurobipy installs from PyPI, but you still need a valid Gurobi license
 # (academic or commercial) for FOB.py / DC.py / SO / RO / Baseline_CO solvers.
+#
+# Sherlock cluster (minimal runtime): pip install -r requirements-cluster.txt
+# See sherlock/README.md
 
 # --- Core scientific stack ---
 numpy==1.26.4

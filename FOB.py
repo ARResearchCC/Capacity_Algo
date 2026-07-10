@@ -32,16 +32,16 @@ locations = ["California", "Arizona", "Alaska", "Minnesota", "Florida"]
 
 # VoLL sensitivity: HVAC ($/kWh) and critical electrical ($/kWh) for FOB
 VOLL_SCENARIOS = {
-    "Low": {"hvac_voll": 1.0, "critical_voll": 100.0},
+    "Low": {"hvac_voll": 1.0, "critical_voll": 30.0},
     "Med": {
-        "hvac_voll": Input_Parameters.HVAC_lol_cost,
-        "critical_voll": Input_Parameters.lossofloadcost,
+        "hvac_voll": Input_Parameters.HVAC_lol_cost,          # 3.0
+        "critical_voll": Input_Parameters.lossofloadcost,     # 100.0
     },
-    "High": {"hvac_voll": 10.0, "critical_voll": 600.0},
+    "High": {"hvac_voll": 10.0, "critical_voll": 300.0},
 }
 
 # CVaR stochastic optimization settings
-CVAR_LAMBDA = 1.0
+CVAR_LAMBDA = Input_Parameters.CVaR_lambda
 CVAR_ALPHA = Input_Parameters.CVaR_alpha
 
 fold = 5
