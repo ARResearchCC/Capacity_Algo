@@ -3,12 +3,14 @@
 #SBATCH --output=logs/%x-%A_%a.out
 #SBATCH --error=logs/%x-%A_%a.err
 #SBATCH --partition=normal
-#SBATCH --qos=long
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
-#SBATCH --time=2-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --array=0-269
 #SBATCH --mail-type=END,FAIL
+# NOTE: normal QOS (24 h/task) — each task is ~25 SO-CVaR solves (a few hours). Do NOT
+# use --qos=long here: Sherlock's long QOS requires a >=48 h request. Tasks are
+# resumable (finished partials skip), so re-submit if any task hits the wall clock.
 
 # SO-CVaR (lambda, alpha) NESTED cross-validation as a SLURM array: one
 # (climate, VoLL, lambda, alpha) combo per task. Default --array=0-269 =
