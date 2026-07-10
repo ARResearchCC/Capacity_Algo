@@ -10,6 +10,12 @@ cd "${ROOT}"
 bash sherlock/preflight.sh
 mkdir -p logs Risk_Sweep_Results/partials
 
+# preflight runs in a subshell, so load the Sherlock modules in THIS shell too —
+# otherwise .venv/bin/python below can't find libpython3.12.so.1.0.
+# shellcheck disable=SC1091
+source sherlock/modules.sh
+load_sherlock_modules
+
 # Size the array from the grid defined in si_run_risk_sweep.py (lazy imports keep
 # this cheap — no solver needed just to count tasks).
 N="$(.venv/bin/python -c 'import sys; sys.path.insert(0,"paper_figures"); import si_run_risk_sweep as m; print(len(m.task_grid()))')"
