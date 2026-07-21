@@ -69,7 +69,9 @@ each one — polish the prose, apply the referee fixes, and keep it honest — n
 > LP-Worst at first use and keep the acronyms); refer to figures as "Figure N" (final numbering
 > below); keep the acronym list consistent (VoLL, PCM, PV, CVaR, VaR, CRF).
 >
-> Write only the section requested. Do not add claims beyond the source files.
+> Write only the section requested. Do not add claims beyond the source files. Please output your
+> writing/update of the current section in a google doc file, and keep adding to the same google doc
+> as you are working on more sections (as more steps/prompts being sent).
 
 ---
 
