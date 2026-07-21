@@ -179,9 +179,14 @@ caption = (
     "dashed line links the Pareto-efficient (lower-left) points, i.e. the "
     "minimum cost achievable for a given reliability. Axes are per-facet "
     "because absolute scales differ ~100x from Polar (AK) to Tropical (FL). "
-    "PCM points dominate their PV+battery counterparts in every climate, and "
-    "SO-CVaR/PCM lies on the frontier in all five, delivering near-best "
-    "reliability at moderate cost."
+    "PCM configurations sweep the frontier in the temperate climates (MN, CA, "
+    "AZ), while some worst-case PV+battery designs remain Pareto-efficient in "
+    "Polar (AK) and Tropical (FL). SO-CVaR/PCM lies on the frontier in all five "
+    "climates and, in Florida, dominates the worst-case LP-Worst/PCM design on "
+    "both cost and reliability -- evidence that fitting a single worst year "
+    "overfits. Within-climate differences are comparable to the +/-1 SD fold "
+    "spread, so the frontier shows tradeoff geometry, not statistically "
+    "separated points."
 )
 
 S.save_fig(fig, "si_fig_frontier", section="si", data=out, caption=caption)

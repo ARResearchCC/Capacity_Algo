@@ -67,6 +67,42 @@ so VoLL does not enter its cost).
 
 ---
 
+## 3b. VoLL vs the diesel price — two different quantities (likely reviewer question)
+
+**Which diesel price does the study actually use?** None, singly. The diesel benchmark is
+*run* at three prices ($13 / $45 / $400 per gallon) only to obtain its design (generator
+size, annual fuel gallons, and fixed capital + O&M). Figure 6 then reports a **break-even**
+price — the delivered fuel price at which the diesel and renewable annualised costs are
+equal — computed price-independently as `total(p) = fixed_cost + gallons·p`. So no single
+price is assumed; the result (break-even ≈ $0.8–8.9/gal, per climate and architecture)
+holds for *any* delivered price above it. The $100–600/gal band drawn on the figure is the
+contested-theatre reference, shown only to demonstrate how far below it the break-even sits.
+
+**Are VoLL and the diesel price consistent — and if diesel is dearer than VoLL, why not
+shed load instead of powering it?** VoLL and the diesel price are *independent inputs to
+different parts of the study* and measure different things. VoLL is the **demand-side
+value** of lost load (the mission/operational consequence of an outage); the diesel price
+is the **supply-side cost** of the benchmark generator. In the renewable model there is no
+diesel, so the alternative to serving a kWh is not "run a genset" but "accept the outage,
+valued at VoLL." The optimiser therefore trades renewable *capital* against the VoLL
+penalty and never faces a "run diesel vs shed" decision — hence the "if diesel > VoLL, do
+not power" logic does not apply. That logic would only arise under a renewable-plus-diesel-
+*backup* reformulation, which we deliberately do **not** adopt (it would tie the two inputs
+together and require re-running the model). Nor is the site ever left unpowered: built
+renewables have ≈zero marginal cost, so they always dispatch to serve what they can; VoLL
+governs only *how much capacity to build*, not whether to run it.
+
+**Do the magnitudes at least cohere?** Yes, reassuringly, and they explain the model's
+behaviour. Critical (electrical) VoLL ($30–300/kWh) far exceeds the fuel-only cost of
+diesel electricity (≈$4/kWh at $45/gal; $9–54/kWh at $100–600/gal), which is exactly why
+the optimiser near-must-serves critical load (unmet ≈ 0 everywhere). HVAC (thermal) VoLL
+($1–10/kWh-thermal) is comparable to the cost of meeting thermal demand with diesel via a
+heat pump (≈$1–15/kWh-thermal at COP ≈ 3.5), which is why a small amount of thermal load is
+economically shed in the tail. So the two independent inputs are mutually consistent and
+jointly account for the observed "critical firm, thermal is the tradeoff" behaviour.
+
+---
+
 ## 4. Assessment and recommendation
 
 - **The $100–600/gal range is defensible for a combat-zone FOB** — it is the hostile-area

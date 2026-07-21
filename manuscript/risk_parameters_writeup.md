@@ -42,9 +42,13 @@ tail-average (expected-shortfall) estimates require more samples than quantile (
 estimates for comparable accuracy (Yamai and Yoshiba 2005; Sarykalin et al. 2008),
 α = 0.9 is the statistically prudent choice for ~20 weather-year scenarios. Fixing
 (λ, α) a priori also keeps SO-CVaR on equal footing with the parameter-free LP
-baselines. We verify in the Supplementary Information that this fixed choice is
-near-optimal across the entire design space and carries no advantage from parameter
-selection on the evaluation data [Fig. Sx].
+baselines. We stress that λ = 0.9 is a *risk preference*, not a cost minimiser: because
+the objective prices reliability through VoLL, the risk-neutral setting (λ = 0) minimises
+expected out-of-sample cost, and the risk-averse setting trades a small mean-cost premium
+for lower tail loss of load. The Supplementary Information confirms that the paper's
+conclusions are robust to the exact (λ, α) — the out-of-sample cost surface is smooth and
+fixing (0.9, 0.9) carries only a small, bounded premium over per-fold tuning — and
+quantifies the tail-reliability that this premium buys [Fig. Sx].
 
 ---
 
@@ -59,24 +63,32 @@ remaining twenty years an inner leave-one-block-out loop fits capacities on fift
 **training** years and scores each (λ, α) on five **validation** years. The test block
 is never used to choose parameters, so the per-fold performance of the
 validation-selected parameters is an unbiased out-of-sample estimate (Varma and Simon
-2006; Cawley and Talbot 2010). Selection uses the same criterion as the main results,
-out-of-sample total system cost. The procedure is repeated for all five climates and
-three VoLL levels (15 cells), so the fixed choice is assessed across the whole design
-space rather than a single case.
+2006; Cawley and Talbot 2010). We assess each (λ, α) on out-of-sample total system cost —
+the same criterion used to report the main results. The procedure is repeated for all
+five climates and three VoLL levels (15 cells), so the choice is examined across the whole
+design space rather than a single case. **This is a robustness check, not a selection
+procedure:** the risk parameters remain fixed a priori.
 
-**Results.** Three findings support the a-priori choice [Fig. Sx]. (i) On a pooled
-validation surface — each cell's cost expressed as relative regret against its own
-optimum and averaged across cells — the low-cost region is broad and flat around
-(λ, α) = (0.9, 0.9), whose mean regret is ⟨…⟩% (rank ⟨…⟩ of 18 grid points); risk
-aversion only degrades markedly at λ = 0 (the risk-neutral corner). (ii) The unbiased
-nested-CV test cost of the fixed (0.9, 0.9) differs from that of per-fold
-cross-validated selection by ⟨…⟩% on average (maximum ⟨…⟩% across cells), i.e. fixing
-the risk parameters costs essentially nothing relative to tuning them — so the main
-comparison is not advantaged by selecting parameters on the evaluation data. (iii) The
-per-cell cross-validated optima cluster at α = 0.9 and λ ∈ {0.75, 0.9, 1.0}, confirming
-the choice is stable across climates and criticality levels. Because the LP baselines
-have no tunable parameters, this equivalence between the fixed and the
-cross-validated SO-CVaR places all methods on the same footing.
+**Results.** The assessment yields three findings [Fig. Sx]. (i) The pooled out-of-sample
+cost surface — each cell's cost expressed as relative regret against its own minimum and
+averaged across cells — is smooth and, as expected for a risk-averse objective, decreases
+toward the risk-neutral corner: minimising expected *cost* favours λ = 0. We therefore do
+**not** claim (λ, α) = (0.9, 0.9) is cost-optimal; it sits on a broad, flat basin only
+≈1% above the cost minimum, so the choice is not knife-edge and the ranking of the three
+methods is unchanged across the low-λ region. (ii) The unbiased nested-CV test cost of the
+fixed (0.9, 0.9) exceeds that of per-fold cost-optimal selection by only ≈1.6% on average
+(maximum ≈6.3%, in the coldest/high-VoLL cell) — a small, bounded premium — so the main
+comparison is not advantaged by selecting parameters on the evaluation data. (iii) That
+premium is the deliberate price of tail reliability: relative to the risk-neutral λ = 0,
+the risk-averse setting reduces out-of-sample unserved energy by ≈34% (see the
+loss-of-load figure), the quantity CVaR is designed to control. Because the LP baselines
+have no tunable parameters, fixing (λ, α) a priori keeps all methods on the same footing.
+
+*(Optional, if a reviewer presses on the specific value of λ: evaluated on a tail-cost
+metric — the worst weather-year cost rather than the mean — the per-cell optima move into
+the interior, λ ≈ 0.5–0.9, and λ = 1 is worse than the interior; i.e. on the resilience-
+relevant objective the risk-averse choice is genuinely preferred. We report the more
+conservative mean-cost view above and keep λ fixed a priori.)*
 
 ---
 

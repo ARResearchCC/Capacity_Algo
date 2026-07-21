@@ -11,7 +11,8 @@ import style as S; import data as D
 #  Config
 # --------------------------------------------------------------------------- #
 VOLL = "Med"                 # representative operating point (HVAC $3, Critical $100 /kWh)
-BAND = (100.0, 600.0)        # plausible fully-burdened delivered-fuel cost ($/gal)
+BAND = (100.0, 600.0)        # contested/hostile delivered fully-burdened fuel cost ($/gal)
+LOWBAND = (13.0, 45.0)       # routine forward delivery -> protected convoy ($/gal)
 REP  = "California"          # representative climate for panel (a)
 PMAX = 800.0                 # max delivered price shown in panel (a) ($/gal)
 
@@ -21,6 +22,11 @@ PMAX = 800.0                 # max delivered price shown in panel (a) ($/gal)
 # --------------------------------------------------------------------------- #
 dfold = D.load_folds(architectures=("Diesel",))
 dfold = dfold[(dfold.split == "test") & (dfold.voll == VOLL)].copy()
+# The swept diesel workbook has a fuel-price dimension (Low/Med/High); fixed_cost and
+# gallons are price-INDEPENDENT, so collapse to one level per (location, fold).
+if "fuel_price_level" in dfold.columns and dfold["fuel_price_level"].notna().any():
+    lvl = "Med" if (dfold["fuel_price_level"] == "Med").any() else dfold["fuel_price_level"].dropna().iloc[0]
+    dfold = dfold[dfold["fuel_price_level"] == lvl].copy()
 dfold["fixed_cost"] = dfold["total_cost"] - dfold["fuel_cost"]
 
 dies = (dfold.groupby("location", observed=True)
@@ -38,11 +44,14 @@ rsum = rsum[(rsum.split == "test") & (rsum.voll == VOLL)].copy()
 rfold = D.load_folds(architectures=("PCM", "PVB"))
 rfold = rfold[(rfold.split == "test") & (rfold.voll == VOLL)].copy()
 
+DESIGN_METHOD = "SO_CVaR"   # paper's recommended design (not the cheapest) — breakeven is method-insensitive
 rows = []
 for (arch, loc), g in rsum.groupby(["architecture", "location"], observed=True):
-    i = g["total_cost"].idxmin()
-    best_method = str(g.loc[i, "method"])
-    best_total = float(g.loc[i, "total_cost"])
+    gm = g[g["method"] == DESIGN_METHOD]
+    gm = gm if not gm.empty else g
+    i = gm["total_cost"].idxmin()   # single SO_CVaR row; idxmin just selects it robustly
+    best_method = str(gm.loc[i, "method"])
+    best_total = float(gm.loc[i, "total_cost"])
     fc = float(dies_by_loc.loc[loc, "fixed_cost"])
     gal = float(dies_by_loc.loc[loc, "gallons"])
     be_mean = (best_total - fc) / gal
@@ -89,18 +98,22 @@ gal_r = float(dies_by_loc.loc[REP, "gallons"])
 axa.plot(p, fc_r + gal_r * p, zorder=4,
          label=f"Diesel ({S.CLIMATE_LABEL[REP]})", **S.DIESEL_LINE)
 
-# plausible fully-burdened fuel-cost band
-axa.axvspan(BAND[0], BAND[1], color="0.85", alpha=0.55, zorder=0)
+# fuel-cost bands: routine forward delivery (light) and contested/hostile (darker)
+axa.axvspan(LOWBAND[0], LOWBAND[1], color="0.92", alpha=0.8, zorder=0)
+axa.text(np.sqrt(LOWBAND[0] * LOWBAND[1]), 1.3e6,
+         f"routine delivery\n${LOWBAND[0]:.0f}-{LOWBAND[1]:.0f}/gal",
+         ha="center", va="top", fontsize=6.0, color="0.40")
+axa.axvspan(BAND[0], BAND[1], color="0.82", alpha=0.6, zorder=0)
 axa.text(np.sqrt(BAND[0] * BAND[1]), 1.3e6,
-         f"plausible delivered\nfuel ${BAND[0]:.0f}-{BAND[1]:.0f}/gal",
-         ha="center", va="top", fontsize=6.5, color="0.30")
+         f"contested delivery\n${BAND[0]:.0f}-{BAND[1]:.0f}/gal",
+         ha="center", va="top", fontsize=6.0, color="0.30")
 
 # best-renewable horizontal reference lines + breakeven markers (representative)
 # price labels are offset per-architecture (up-right vs down-left) because the
 # two CA reference levels almost coincide.
 be_rep = be[be.location == REP]
-price_off = {"PVB": (7, 10, "left", "bottom"),
-             "PCM": (-7, -12, "right", "top")}
+price_off = {"PVB": (8, 9, "left", "bottom"),
+             "PCM": (8, -11, "left", "top")}
 ren_handles = []
 for _, r in be_rep.iterrows():
     arch = r["architecture"]
@@ -117,7 +130,7 @@ for _, r in be_rep.iterrows():
                  xytext=(dx, dy), textcoords="offset points",
                  ha=ha, va=va, fontsize=6.6, color=c, weight="bold")
     ren_handles.append(Line2D([0], [0], color=c, lw=1.2, linestyle="-",
-                              label=f"{S.ARCH_LABEL[arch]}, best {S.METHOD_LABEL[r['best_method']]}",
+                              label=f"{S.ARCH_LABEL[arch]}, {S.METHOD_LABEL[r['best_method']]}",
                               **{k: v for k, v in ms.items() if k != "color"}))
 
 axa.set_xscale("log")
@@ -134,9 +147,7 @@ S.ygrid(axa)
 handles_a = [
     Line2D([0], [0], **S.DIESEL_LINE, label=f"Diesel ({S.CLIMATE_LABEL[REP]})"),
     Line2D([0], [0], color="0.7", lw=0.8, label="Diesel (other climates)"),
-] + ren_handles + [
-    Patch(facecolor="0.85", alpha=0.55, label=f"Fuel band ${BAND[0]:.0f}-{BAND[1]:.0f}/gal"),
-]
+] + ren_handles
 axa.legend(handles=handles_a, loc="upper left", fontsize=6.0,
            handlelength=2.0, borderaxespad=0.5, labelspacing=0.35)
 
@@ -169,14 +180,18 @@ for arch in S.ARCH_ORDER:
                      textcoords="offset points", ha="center", va="bottom",
                      fontsize=6.2)
 
-# plausible fuel-cost band (far above every breakeven)
-axb.axhspan(BAND[0], BAND[1], color="0.85", alpha=0.6, zorder=0)
+# fuel-cost bands (both far above every breakeven)
+axb.axhspan(LOWBAND[0], LOWBAND[1], color="0.92", alpha=0.85, zorder=0)
+axb.text(len(x) - 0.5, np.sqrt(LOWBAND[0] * LOWBAND[1]),
+         f"routine delivery ${LOWBAND[0]:.0f}-{LOWBAND[1]:.0f}/gal",
+         ha="right", va="center", fontsize=6.0, color="0.40")
+axb.axhspan(BAND[0], BAND[1], color="0.82", alpha=0.6, zorder=0)
 axb.text(len(x) - 0.5, np.sqrt(BAND[0] * BAND[1]),
-         f"plausible delivered fuel\n${BAND[0]:.0f}-{BAND[1]:.0f}/gal",
-         ha="right", va="center", fontsize=6.5, color="0.30")
+         f"contested delivery\n${BAND[0]:.0f}-{BAND[1]:.0f}/gal",
+         ha="right", va="center", fontsize=6.0, color="0.30")
 
 axb.set_yscale("log")
-axb.set_ylim(1.0, 1000.0)
+axb.set_ylim(0.5, 1000.0)
 axb.set_xticks(x)
 axb.set_xticklabels([S.CLIMATE_LABEL[l] for l in S.LOCATION_ORDER],
                     rotation=28, ha="right")
@@ -190,7 +205,7 @@ arch_h = [Patch(facecolor="white", edgecolor="black", hatch=S.ARCH_HATCH[a],
                 label=S.ARCH_LABEL[a]) for a in S.ARCH_ORDER]
 methods_used = [m for m in S.METHOD_ORDER if m in be["best_method"].unique()]
 meth_h = [Patch(facecolor=S.method_color(m), edgecolor="black",
-                label=f"best = {S.METHOD_LABEL[m]}") for m in methods_used]
+                label=f"{S.METHOD_LABEL[m]} design") for m in methods_used]
 axb.legend(handles=arch_h + meth_h, loc="upper left", fontsize=6.0,
            handlelength=1.4, ncol=1, borderaxespad=0.3, labelspacing=0.3)
 
@@ -210,15 +225,19 @@ caption = (
     f"any delivered price p as fixed_cost + gallons*p, where fixed_cost = "
     f"total_cost - fuel_cost and gallons are price-independent. (a) For "
     f"{S.CLIMATE_LABEL[REP]}, the diesel cost line (grey dashed; thin grey = other "
-    f"climates) crosses the best renewable design of each architecture (min mean "
-    f"test total cost across methods) at {be_rep['breakeven_usd_per_gal'].min():.1f}-"
-    f"{be_rep['breakeven_usd_per_gal'].max():.1f} $/gal, far left of the plausible "
-    f"$100-600/gal delivered-fuel band (shaded). (b) The break-even delivered diesel "
-    f"price for the best renewable design in every climate (bars: colour = winning "
-    f"method, hatch = architecture; error bars = +/-1 SD across the 5 folds) stays "
-    f"below ~10 $/gal, an order of magnitude under the shaded resupply band, so the "
+    f"climates) crosses the recommended SO-CVaR design of each architecture at "
+    f"{be_rep['breakeven_usd_per_gal'].min():.1f}-"
+    f"{be_rep['breakeven_usd_per_gal'].max():.1f} $/gal, far left of both the routine "
+    f"forward-delivery band (${LOWBAND[0]:.0f}-{LOWBAND[1]:.0f}/gal, light) and the "
+    f"contested-delivery band (${BAND[0]:.0f}-{BAND[1]:.0f}/gal, darker). (b) The "
+    f"break-even delivered diesel price for the recommended SO-CVaR design in every "
+    f"climate (bars: hatch = architecture; error bars = +/-1 SD across the 5 folds); "
+    f"because the three methods' costs differ by only ~1-3% (Fig 3), the break-even is "
+    f"nearly method-independent. It stays below ~9 $/gal -- below even the routine "
+    f"forward-delivery band (${LOWBAND[0]:.0f}-{LOWBAND[1]:.0f}/gal) in every climate, "
+    f"and 11x-766x under the contested band -- so the "
     f"renewable microgrid is cheaper than a genset at any realistic forward-operating-"
-    f"base fuel price."
+    f"base fuel price, without relying on the contested premium."
 )
 S.save_fig(fig, "fig6_diesel_breakeven", section="main", data=out, caption=caption)
 

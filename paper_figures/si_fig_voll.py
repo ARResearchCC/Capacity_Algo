@@ -98,15 +98,18 @@ for lv in S.VOLL_ORDER:
 # --------------------------------------------------------------------------- #
 CAP = (
     "VoLL sensitivity of the FOB microgrid in a representative marine climate "
-    "(California; pooling across climates is dominated by Alaska). "
-    "Lines show fold-mean out-of-sample (test-split) results versus the value-of-"
-    "lost-load level (Low: HVAC $1/Critical $30; Med: $3/$100; High: $10/$300 per "
-    "kWh); colour = method, marker fill and line style = architecture (open/dashed "
-    "= PV+battery, filled/solid = with PCM). (a) Annualized total cost (USD/yr); "
-    "(b) total unmet load (kWh/yr). Bands are +/-1 SD across the 5 folds. As VoLL "
-    "rises, the SO-CVaR cost advantage over LP-Avg and LP-Worst GROWS: for PCM in "
-    "California the SO-CVaR-vs-LP gap moves from roughly break-even at Low to "
-    "~$100-180/yr cheaper at High, while its unmet load stays at or below the LP "
-    "methods."
+    "(California; pooling across climates is dominated by Alaska). Lines show "
+    "fold-mean out-of-sample (test-split) results versus the value-of-lost-load "
+    "level (Low: HVAC $1/Critical $30; Med: $3/$100; High: $10/$300 per kWh); "
+    "colour = method, marker fill and line style = architecture (open/dashed = "
+    "PV+battery, filled/solid = with PCM). (a) Annualized total cost (USD/yr); "
+    "(b) total unmet load (kWh/yr). Bands are +/-1 SD across the 5 folds. Method "
+    "cost differences are small and within the fold bands at Low and Med VoLL, "
+    "separating only at High. With PCM at High VoLL, SO-CVaR is the cheapest "
+    f"method ({pcm.loc['High','SO_CVaR']-pcm.loc['High','LP_Avg']:+.0f} $/yr vs "
+    f"LP-Avg, {pcm.loc['High','SO_CVaR']-pcm.loc['High','LP_Worst']:+.0f} $/yr vs "
+    "LP-Worst), while its unmet load tracks the robust LP-Worst (below LP-Avg, "
+    "slightly above LP-Worst). Without PCM this cost crossover does not occur "
+    "(SO-CVaR remains a small premium over LP-Avg)."
 )
 S.save_fig(fig, "si_fig_voll", section="si", data=agg, caption=CAP)

@@ -177,16 +177,21 @@ caption = (
     "value (grey tick) to the mean test-year value (coloured marker) for one "
     "method x architecture; the gap is the train->test generalization "
     "degradation. Top row: total annualized system cost; bottom row: expected "
-    "annual unmet energy (thermal+electrical, recovered from the VoLL penalty "
-    "terms). Facets are climates (cold->hot), each auto-scaled because climate "
-    "costs and loads differ ~10x; test-year values are primary. Error bars are "
-    "+/-1 SD of the test value across the five cross-validation folds (lower "
-    "whisker clipped at zero for unmet energy). Architecture is read from the "
-    "marker (open = PV+battery, filled = with PCM); method from colour/label. "
-    "Pooled over both architectures and the five climates, SO-CVaR has the "
-    "smallest reliability gap (unmet energy +7.4%) versus LP-Avg (+17.2%, "
-    "overfitting) and LP-Worst (-51.4%, over-conservative); LP-Avg is the only "
-    "method whose cost also rises out of sample (+2.7%).")
+    "annual unmet energy (essentially all thermal; critical/electrical unmet is "
+    "~0). Facets are climates (cold->hot), each auto-scaled because climate costs "
+    "and loads differ ~10x; test-year values are primary. Error bars are +/-1 SD "
+    "of the test value across the five cross-validation folds (lower whisker "
+    "clipped at zero for unmet energy). Architecture is read from the marker "
+    "(open = PV+battery, filled = with PCM); method from colour/label. Pooled "
+    "over both architectures and the five climates, SO-CVaR has the smallest "
+    f"reliability gap (unmet energy {unmet_p.loc['SO_CVaR','deg_pct']:+.1f}%) "
+    f"versus LP-Avg ({unmet_p.loc['LP_Avg','deg_pct']:+.1f}%, overfitting) and "
+    f"LP-Worst ({unmet_p.loc['LP_Worst','deg_pct']:+.1f}%, over-conservative); "
+    "LP-Avg is the only method whose cost also rises out of sample "
+    f"({cost_p.loc['LP_Avg','deg_pct']:+.1f}%). LP-Worst attains the lowest test "
+    "unmet in every climate; SO-CVaR's advantage is the smallest train->test gap "
+    "(reliability delivered as promised) at near-cheapest cost -- the knee of the "
+    "tradeoff, not the lowest reliability level.")
 
 S.save_fig(fig, "fig5_generalization", section="main", data=out, caption=caption)
 print("\nrows in value table:", len(out))

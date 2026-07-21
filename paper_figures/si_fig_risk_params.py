@@ -1,6 +1,7 @@
 """
-si_fig_risk_params.py — SI figure: a-priori risk parameters (lambda, alpha) are
-near-optimal across the whole design space, and carry no selection advantage.
+si_fig_risk_params.py — SI figure: ROBUSTNESS check on the a-priori risk parameters
+(lambda, alpha). Shows the paper's conclusions do not hinge on the exact value; we do
+NOT claim (0.9, 0.9) is cost-optimal (risk-neutral lambda=0 minimises expected cost).
 
 Reads Risk_Sweep_Results/risk_sweep_summary.xlsx (from si_collect_risk_sweep.py):
   (a) Pooled RELATIVE-REGRET surface over (lambda, alpha): each (climate x VoLL)
@@ -113,25 +114,32 @@ def main():
     S.despine(ax)
 
     fig.suptitle(
-        "A-priori risk parameters across the design space (nested CV, 5 climates x 3 VoLL). "
-        f"Global CV-optimum $\\lambda$={gopt_la[0]:g}, $\\alpha$={gopt_la[1]:g}; "
-        f"star = fixed (0.9, 0.9).", fontweight="bold")
+        "Robustness of results to the a-priori risk parameters (nested CV, 5 climates x 3 VoLL). "
+        "Fixed operating point (0.9, 0.9) = star; the paper's conclusions do not hinge on the exact value.",
+        fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.93])
 
     mean_gap = cells["gap_pct"].mean(); max_gap = cells["gap_pct"].max()
     caption = (
-        "SI: justification of the fixed a-priori SO-CVaR risk parameters "
-        "(lambda=0.9, alpha=0.9), by nested cross-validation over the 25 weather years "
-        "(5-year blocks as groups) for every climate x VoLL cell (selection uses inner "
-        "validation only; test blocks are never used to choose parameters). "
-        "(a) Validation cost of each (lambda, alpha), expressed as relative regret vs each "
-        "cell's own optimum and averaged over all cells; the basin is flat and the fixed "
-        "point (star) sits within it. (b) Unbiased nested-CV test cost of the fixed "
-        "(0.9, 0.9) minus the per-fold-selected parameters, per cell "
-        f"(mean {mean_gap:+.2f}%, max {max_gap:+.2f}%): fixing the parameters costs "
-        "essentially nothing versus tuning, so the main comparison is not advantaged by "
-        "selecting on the evaluation data. (c) The per-cell CV-optimal (lambda, alpha) "
-        "cluster around the fixed choice.")
+        "SI (robustness, not selection): the SO-CVaR risk parameters -- CVaR weight lambda "
+        "and confidence alpha -- are FIXED a priori at (0.9, 0.9) as a risk-averse posture "
+        "for a mission-critical base (the LP baselines are likewise knob-free). This figure "
+        "shows the choice is robust and the paper's conclusions do not hinge on the exact "
+        "value. Assessment is by nested cross-validation over the 25 weather years (5-year "
+        "blocks as groups; the test blocks are never used to choose parameters). (a) "
+        "Out-of-sample cost of each (lambda, alpha) as relative regret vs each cell's own "
+        "minimum, averaged over cells: the surface is smooth (not knife-edge). Minimising "
+        "expected COST favours the risk-neutral corner (lambda=0); the lambda=0 column is "
+        "alpha-invariant, so the cost optimum is a column, not a point. We do NOT claim "
+        "(0.9, 0.9; star) is cost-optimal -- it is a deliberate risk preference sitting on "
+        "a smooth, monotone lambda-slope about 1.4% above the cost minimum. (b) Nested-CV "
+        "test cost of the fixed "
+        f"(0.9, 0.9) minus the per-fold cost-optimal parameters, per cell (mean "
+        f"{mean_gap:+.2f}%, max {max_gap:+.2f}%): fixing the risk-averse setting costs only "
+        "this small, bounded premium in mean cost -- the price paid for the tail reliability "
+        "CVaR targets (see the loss-of-load figure). (c) Per-cell cost-optima; the fixed "
+        "point (star) is a risk choice, not a cost minimiser. Overall: results are robust "
+        "to the risk parameters, so we fix them a priori and report this sensitivity here.")
     S.save_fig(fig, "si_fig_risk_params", section="si", data=cells, caption=caption)
 
 
