@@ -51,8 +51,13 @@ def main():
     gopt = regret.loc[regret["mean_rel_regret_pct"].idxmin()]
     gopt_la = (gopt["lambda"], gopt["alpha"])
 
-    fig, axes = plt.subplots(1, 3, figsize=S.figsize_double(2.9),
-                             gridspec_kw={"width_ratios": [1.15, 1.15, 1.0]})
+    # Near-square 2-row layout (was a wide 1x3 strip): (a) and (b) on top,
+    # (c) centred below, so it pastes into a document column without squishing.
+    fig = plt.figure(figsize=(6.5, 5.6), constrained_layout=True)
+    gs = fig.add_gridspec(2, 4)
+    axes = [fig.add_subplot(gs[0, 0:2]),   # (a) regret heatmap
+            fig.add_subplot(gs[0, 2:4]),   # (b) cost-of-fixing bars
+            fig.add_subplot(gs[1, 1:3])]   # (c) per-cell optimum (centred)
 
     # ---- (a) pooled relative-regret surface -------------------------------
     ax = axes[0]
@@ -114,10 +119,10 @@ def main():
     S.despine(ax)
 
     fig.suptitle(
-        "Robustness of results to the a-priori risk parameters (nested CV, 5 climates x 3 VoLL). "
-        "Fixed operating point (0.9, 0.9) = star; the paper's conclusions do not hinge on the exact value.",
-        fontweight="bold")
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
+        "Robustness of results to the a-priori risk parameters "
+        "(nested CV, 5 climates x 3 VoLL).\nFixed operating point (0.9, 0.9) = star; "
+        "the paper's conclusions do not hinge on the exact value.",
+        fontweight="bold", fontsize=9)
 
     mean_gap = cells["gap_pct"].mean(); max_gap = cells["gap_pct"].max()
     caption = (

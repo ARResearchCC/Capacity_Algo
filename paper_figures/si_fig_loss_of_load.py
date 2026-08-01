@@ -144,7 +144,7 @@ caption = (
 # tidy CSV of plotted values
 out = agg.copy()
 out = out.sort_values(["location", "method", "architecture"])
-S.save_fig(fig, "fig4_loss_of_load", section="main", data=out, caption=caption)
+S.save_fig(fig, "si_fig_loss_of_load", section="si", data=out, caption=caption)
 
 # --------------------------------------------------------------------------- #
 # Printed stats

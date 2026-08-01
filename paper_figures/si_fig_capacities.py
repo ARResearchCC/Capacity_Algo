@@ -113,7 +113,7 @@ caption = (
     "within a row); PCM shifts thermal duty into thermal storage, sharply "
     "reducing the battery sizing relative to the No-PCM design.")
 
-S.save_fig(fig, "fig2_capacities", section="main", data=out, caption=caption)
+S.save_fig(fig, "si_fig_capacities", section="si", data=out, caption=caption)
 
 # --------------------------------------------------------------------------- #
 # PRINTED STATS

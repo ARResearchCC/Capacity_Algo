@@ -36,7 +36,7 @@ Cold PCM
 $70 /kWh
 4% of capital/yr
 
-Cost source: NREL Annual Technology Baseline [48] — confirm this reference backs the PV/battery/PCM values.
+The capital and fixed-O&M figures above are representative estimates rather than site-specific quotations, chosen to be consistent in magnitude and relative ordering with public technology-cost benchmarks — principally the NREL Annual Technology Baseline [48], together with the wider PV, battery, and PCM cost literature. As these are themselves projections, we treat them as order-of-magnitude inputs rather than exact prices. The same values are applied to all three planning methods and both architectures, so the comparative findings — the relative cost, calibration, and risk behaviour of the methods — are internally consistent and do not hinge on the precise numbers; only absolute economics, such as the diesel break-even price, scale with them.
 S6. Cost model and annualization
 Capital costs are annualized with the capital recovery factor
 CRF=d (1+d)L(1+d)L−1\text{CRF} = \frac{d\,(1+d)^L}{(1+d)^L - 1}CRF=(1+d)L−1d(1+d)L​

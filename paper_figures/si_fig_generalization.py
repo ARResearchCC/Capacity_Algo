@@ -1,5 +1,5 @@
 """
-fig5_generalization — out-of-sample (train -> test) generalization motivation.
+si_fig_generalization — out-of-sample (train -> test) generalization motivation.
 
 For each method x architecture, a paired dumbbell connects the mean training-year
 value (grey tick) to the mean test-year value (coloured, arch-styled marker); the
@@ -193,5 +193,5 @@ caption = (
     "(reliability delivered as promised) at near-cheapest cost -- the knee of the "
     "tradeoff, not the lowest reliability level.")
 
-S.save_fig(fig, "fig5_generalization", section="main", data=out, caption=caption)
+S.save_fig(fig, "si_fig_generalization", section="si", data=out, caption=caption)
 print("\nrows in value table:", len(out))

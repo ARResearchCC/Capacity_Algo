@@ -105,10 +105,10 @@ c = CX[1]
 methods = []
 mrows = {"LP_Avg": 60, "LP_Worst": 42, "SO_CVaR": 24}
 for mkey in S.METHOD_ORDER:
-    hl = (mkey == "SO_CVaR")                      # SO-CVaR is highlighted
+    # SO-CVaR is highlighted by its green colour (as elsewhere); borders are uniform
     methods.append(box(c, mrows[mkey], BW, 9.5, S.METHOD_LABEL[mkey],
                        fc=S.METHOD_COLOR[mkey], ec="black", tc="white",
-                       fs=8, fw="bold", lw=1.9 if hl else 0.9))
+                       fs=8, fw="bold", lw=0.9))
 
 # --------------------------------------------------------------------------- #
 #  Stage 3 — five-fold cross-validation (with a small fold illustration)
@@ -126,7 +126,7 @@ for i, ry in enumerate(frows):
                      edgecolor="white", linewidth=0.6, zorder=3))
 ax.text(c, 24, "Train: 20 yr  /  Test: 5 yr", ha="center", va="center",
         fontsize=6.6, color="black", zorder=4)
-ax.text(c - 7.2 + seg / 2, 55.5, "test fold", ha="center", va="center",
+ax.text(c - 7.2 + seg / 2, 54.0, "test fold", ha="center", va="center",
         fontsize=5.8, color=S.METHOD_COLOR["SO_CVaR"], zorder=4)
 
 # --------------------------------------------------------------------------- #

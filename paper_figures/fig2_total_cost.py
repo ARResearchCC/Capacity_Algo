@@ -157,21 +157,17 @@ plotted = plotted.sort_values(["location", "method", "architecture"])
 
 caption = (
     "Out-of-sample annual total system cost by climate for the two renewable "
-    "architectures (PV+battery, hatched: with phase-change thermal storage) under "
-    "the three sizing methods (LP-Avg, LP-Worst, SO-CVaR; colour). Each bar is the "
-    "mean over 5 test years and 5 cross-validation folds, decomposed into annualized "
-    "capital (solid shade) and unmet-load VoLL penalty (light shade = HVAC/thermal + "
-    "critical/electrical penalties); for these renewables non-penalty operating cost "
-    "is ~0 so capital + VoLL penalty = total cost exactly. Thin bars show +/-1 SD across "
-    "the 5 folds on the total. VoLL is at the representative Med level (HVAC $3/kWh, "
-    "critical $100/kWh). Note independent y-axes per climate (thousand USD/yr); costs "
-    "range from ~2k USD/yr in warm climates to ~18k in Alaska, and the penalty share "
-    "grows sharply in cold climates."
+    "architectures (PV+battery; hatched = with phase-change thermal storage) under "
+    "the three sizing methods (colour). Each bar is the mean over the 5 test years "
+    "and 5 cross-validation folds, split into annualized capital (solid shade) and "
+    "unmet-load VoLL penalty (light shade); thin bars are +/-1 SD across folds. VoLL "
+    "is at the representative Med level (HVAC $3/kWh, critical $100/kWh). Note the "
+    "independent per-climate y-axes (thousand USD/yr)."
 )
 
-S.save_fig(fig, "fig3_total_cost", section="main", data=plotted, caption=caption)
+S.save_fig(fig, "fig2_total_cost", section="main", data=plotted, caption=caption)
 
 # also drop the pct-change table beside the figure for quoting
 outdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main")
-pct.to_csv(os.path.join(outdir, "fig3_total_cost_pct_change.csv"), index=False)
-print("\nsaved fig3_total_cost + pct-change table")
+pct.to_csv(os.path.join(outdir, "fig2_total_cost_pct_change.csv"), index=False)
+print("\nsaved fig2_total_cost + pct-change table")

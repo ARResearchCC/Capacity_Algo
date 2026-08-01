@@ -1,5 +1,5 @@
 """
-fig_riskterm.py — the risk term earns its keep against the RISK-NEUTRAL stochastic program.
+fig5_riskterm.py — the risk term earns its keep against the RISK-NEUTRAL stochastic program.
 
 Referees will ask whether SO-CVaR's advantage is just "stochastic optimization beats
 deterministic heuristics" or genuinely "risk-aware beats risk-neutral." This figure answers it
@@ -12,7 +12,7 @@ points BELOW the line => CVaR delivers lower unmet load out of sample. Colour = 
   (b) worst-fold (tail) out-of-sample unmet energy
 The cost of the risk term is a median +1.2% out-of-sample total cost (annotated).
 
-Run:  .\\.venv_verify\\Scripts\\python.exe paper_figures\\fig_riskterm.py
+Run:  .\\.venv_verify\\Scripts\\python.exe paper_figures\\fig5_riskterm.py
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -81,17 +81,15 @@ out = r.assign(cost_premium_pct=cost_prem,
                worst_reduction_pct=100 * (1 - r["worst9"] / r["worst0"]))
 caption = (
     "The risk term versus the risk-neutral stochastic program. Within the same nested "
-    "cross-validation, the CVaR design (λ=0.9) is compared against the risk-neutral two-stage "
-    "stochastic program (λ=0) — the natural scientific baseline — for the PCM architecture "
-    "across five climates and three VoLL levels (15 cells, α=0.9). Each point is one cell; "
-    "x = risk-neutral SO, y = CVaR, dashed line = equality, so points below favour CVaR. "
+    "cross-validation, the CVaR design (λ=0.9) is compared against the risk-neutral "
+    "two-stage program (λ=0) for the PCM architecture across five climates and three "
+    "VoLL levels (15 cells, α=0.9). Each point is one cell; x = risk-neutral SO, "
+    "y = CVaR, dashed line = equality, so points below favour CVaR. Colour = VoLL. "
     "(a) Mean out-of-sample unmet energy: CVaR is lower in all 15 cells (median "
-    f"{out['mean_reduction_pct'].median():.0f}% reduction). (b) Worst-fold (tail) unmet energy: "
-    f"CVaR is lower in all 15 cells (median {out['worst_reduction_pct'].median():.0f}% "
-    "reduction), the gap widening with VoLL. The risk term therefore improves out-of-sample "
-    "reliability over a proper risk-neutral stochastic baseline — not merely over deterministic "
-    f"heuristics — for a median out-of-sample total-cost premium of {cost_prem.median():.1f}%.")
-S.save_fig(fig, "fig_riskterm", section="main", data=out, caption=caption)
+    f"{out['mean_reduction_pct'].median():.0f}% reduction). (b) Worst-fold (tail) unmet "
+    f"energy: CVaR is lower in all 15 cells (median {out['worst_reduction_pct'].median():.0f}% "
+    f"reduction). Median out-of-sample total-cost premium: {cost_prem.median():.1f}%.")
+S.save_fig(fig, "fig5_riskterm", section="main", data=out, caption=caption)
 
 print("=== CVaR (lambda=0.9) vs risk-neutral SO (lambda=0), PCM, alpha=0.9, outer_test ===")
 print(f"mean unmet:  CVaR lower in {(r['mean9']<r['mean0']).sum()}/{len(r)} cells; "

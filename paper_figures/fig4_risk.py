@@ -1,5 +1,5 @@
 """
-fig_risk.py — supporting risk result: relative to the average-year design (LP-Avg),
+fig4_risk.py — supporting risk result: relative to the average-year design (LP-Avg),
 SO-CVaR reduces BOTH the reliability tail and the year-to-year cost variability.
 
 Two SO-CVaR-vs-LP-Avg scatters (x = LP-Avg, y = SO-CVaR, dashed y=x line); a point
@@ -13,7 +13,7 @@ Honest caveat (state in text): the tail reduction (a) is partly bought with ~1% 
 capacity, so it is movement along the cost-reliability frontier; the UNCONFOUNDED win is the
 cost-variance reduction (b), which holds in 30/30 cells and is not paid for by extra spend.
 
-Run:  .\\.venv_verify\\Scripts\\python.exe paper_figures\\fig_risk.py
+Run:  .\\.venv_verify\\Scripts\\python.exe paper_figures\\fig4_risk.py
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -100,21 +100,18 @@ wu_red = pct_reduction(wu)
 cs_red = pct_reduction(cs)
 out = agg.copy()
 caption = (
-    "SO-CVaR reduces both the reliability tail and the year-to-year cost variability "
-    "relative to the average-year design. Each point is one climate x architecture x VoLL "
-    "cell (30 total) on the out-of-sample test split; x = LP-Avg, y = SO-CVaR, dashed line "
-    "= equality, so points below the line favour SO-CVaR. Colour = VoLL level, marker = "
-    "architecture. (a) Worst-fold expected unmet energy (a coarse tail proxy: the largest of "
-    "the 5 fold means; loss of load is essentially all thermal): SO-CVaR is lower in "
-    f"{int((wu_red > 0).sum())}/{int(wu_red.notna().sum())} cells (median "
-    f"{wu_red.median():.0f}% reduction). (b) Across-fold standard deviation of total cost "
+    "SO-CVaR versus the average-year design (LP-Avg) on the out-of-sample test split. "
+    "Each point is one climate x architecture x VoLL cell (30 total); x = LP-Avg, "
+    "y = SO-CVaR, dashed line = equality, so points below favour SO-CVaR. Colour = "
+    "VoLL level, marker = architecture. (a) Worst-fold unmet energy (a coarse tail "
+    "proxy -- the largest of the 5 fold means; loss of load is essentially all "
+    f"thermal): SO-CVaR is lower in {int((wu_red > 0).sum())}/{int(wu_red.notna().sum())} "
+    f"cells (median {wu_red.median():.0f}% reduction). (b) Across-fold SD of total cost "
     f"(year-to-year cost stability): SO-CVaR is lower in {int((cs_red > 0).sum())}/"
-    f"{int(cs_red.notna().sum())} cells (median {cs_red.median():.0f}% reduction). The tail "
-    "reduction in (a) is partly obtained by installing more capacity (about 5% more capital, "
-    "roughly 1% more total mean spend once the lower expected penalty is netted) -- movement "
-    "along the cost-reliability frontier; the cost-stability gain in (b) is not a mechanical "
-    "consequence of higher mean spend and is the cleaner, unconfounded risk result.")
-S.save_fig(fig, "fig_risk", section="main", data=out, caption=caption)
+    f"{int(cs_red.notna().sum())} cells (median {cs_red.median():.0f}% reduction). The "
+    "tail gain in (a) is partly bought with ~1% more mean spend; the cost-stability "
+    "gain in (b) is the cleaner, unconfounded result.")
+S.save_fig(fig, "fig4_risk", section="main", data=out, caption=caption)
 
 print("=== Risk reduction vs LP-Avg (test split, all 30 cells) ===")
 print(f"Worst-fold unmet:  SO-CVaR lower in {int((wu_red>0).sum())}/{int(wu_red.notna().sum())}"

@@ -35,19 +35,32 @@ across the 5 folds as dispersion.
 
 ## Figure manifest
 
+Numbering matches the manuscript (calibration-lead lineup). Main-text files live in
+`main/` and are numbered `fig1`…`fig6` in paste order; everything else is in `si/`.
+
+**Main text (Fig 1–6):**
+
 | Figure | Script | Source data | Status |
 |--------|--------|-------------|--------|
-| **fig1_workflow** (Fig 1b) | `fig1_workflow.py` | none (schematic) | ok |
-| **fig2_capacities** (Fig 2) | `fig2_capacities.py` | `FOB_Sensitivity_Results.xlsx`, `FOB_PVB_Sensitivity_Results.xlsx` | ok |
-| **fig3_total_cost** (Fig 3, headline) | `fig3_total_cost.py` | PCM + PVB workbooks | ok |
-| **fig4_loss_of_load** (Fig 4) | `fig4_loss_of_load.py` | PCM + PVB workbooks | ok |
-| **fig5_generalization** (Fig 5) | `fig5_generalization.py` | PCM + PVB workbooks | ok |
-| **fig6_diesel_breakeven** (Fig 6) | `fig6_diesel_breakeven.py` | PCM + PVB + `FOB_Diesel_Results/…xlsx` | ok |
-| **si_fig_frontier** (S1) | `si_fig_frontier.py` | PCM + PVB workbooks | ok |
-| **si_fig_voll** (S2) | `si_fig_voll.py` | PCM + PVB workbooks | ok |
-| **si_fig_risk_params** (S3) | `si_run_risk_sweep.py` (Sherlock array) → `si_collect_risk_sweep.py` → `si_fig_risk_params.py` | **needs generation** (no sweep in workbooks) | pending data |
-| **si_fig_dispatch** (S4) | `si_run_dispatch_trace.py` → `si_fig_dispatch.py` | **needs generation** (hourly dispatch) | pending data |
-| **si_fig_variability** (S5) | `si_fig_variability.py` | `Yearly_Results/locations_result.xlsx` | ok (1 panel omitted) |
+| **Fig 1** — workflow (`fig1_workflow`) | `fig1_workflow.py` | none (schematic) | ok |
+| **Fig 2** — out-of-sample cost parity (`fig2_total_cost`) | `fig2_total_cost.py` | PCM + PVB workbooks | ok |
+| **Fig 3** — reliability calibration (HERO) (`fig3_calibration`) | `fig3_calibration.py` | PCM + PVB workbooks | ok |
+| **Fig 4** — risk: tail unmet + cost variance (`fig4_risk`) | `fig4_risk.py` | PCM + PVB workbooks | ok |
+| **Fig 5** — risk term vs risk-neutral λ=0 (`fig5_riskterm`) | `fig5_riskterm.py` | risk-sweep λ=0 vs λ=0.9 (PCM, 15 cells) | ok |
+| **Fig 6** — diesel break-even (`fig6_diesel_breakeven`) | `fig6_diesel_breakeven.py` | PCM + PVB + `FOB_Diesel_Results/…xlsx` | ok |
+
+**Supporting information (SI):**
+
+| Figure | Script | Source data | Status |
+|--------|--------|-------------|--------|
+| **si_fig_capacities** — sized capacities | `si_fig_capacities.py` | `FOB_Sensitivity_Results.xlsx`, `FOB_PVB_Sensitivity_Results.xlsx` | ok |
+| **si_fig_loss_of_load** — loss of load (thermal + worst event) | `si_fig_loss_of_load.py` | PCM + PVB workbooks | ok |
+| **si_fig_generalization** — train→test dumbbell (superseded by Fig 3) | `si_fig_generalization.py` | PCM + PVB workbooks | ok |
+| **si_fig_frontier** — cost–unmet frontier | `si_fig_frontier.py` | PCM + PVB workbooks | ok |
+| **si_fig_voll** — VoLL sensitivity | `si_fig_voll.py` | PCM + PVB workbooks | ok |
+| **si_fig_risk_params** — risk-parameter robustness | `si_run_risk_sweep.py` (Sherlock array) → `si_collect_risk_sweep.py` → `si_fig_risk_params.py` | **needs generation** (no sweep in workbooks) | pending data |
+| **si_fig_dispatch** — dispatch trace | `si_run_dispatch_trace.py` → `si_fig_dispatch.py` | **needs generation** (hourly dispatch) | pending data |
+| **si_fig_variability** — interannual variability | `si_fig_variability.py` | `Yearly_Results/locations_result.xlsx` | ok (1 panel omitted) |
 
 ## Unavailable metrics / gaps
 
@@ -89,15 +102,19 @@ across the 5 folds as dispersion.
 
 ## Key quotable results (Med VoLL, out-of-sample)
 
-- **Cost (Fig 3):** SO-CVaR is cheaper than LP-Worst in every climate (0.1–3.3%),
-  within ~1.5% of the cost-minimizing LP-Avg, and beats LP-Avg for PCM in Marine
-  (−3.9%) and Tropical (−2.0%).
-- **Reliability (Fig 4):** electrical loss of load is negligible everywhere
-  (≤0.7 kWh/yr); SO-CVaR cuts thermal unmet energy vs LP-Avg by 9–68% across cells.
-- **Generalization (Fig 5):** pooled train→test reliability gap is smallest for
-  SO-CVaR (+7.4%) vs LP-Avg (+17.2%, overfits) and LP-Worst (−51%, over-conservative).
-- **Diesel (Fig 6):** breakeven delivered diesel price is 1.6–9.3 $/gal across
-  climates — far below the $100–600/gal fully-burdened resupply band, so the renewable
-  microgrid wins at any realistic FOB fuel price.
-- **Sizing (Fig 2):** LP-Worst builds the largest systems; adding PCM cuts battery
-  sizing ~64% (43.4 → 15.8 kWh mean) while leaving PV essentially unchanged.
+- **Cost parity (Fig 2):** SO-CVaR is cheaper than LP-Worst in every climate (0.1–3.3%),
+  within ~1.5% of the cost-minimizing LP-Avg — reliability at *comparable* cost, not cheaper.
+- **Calibration (Fig 3, HERO):** median test/plan unmet ratio SO-CVaR 1.02, LP-Avg 1.11
+  (under-provisions), LP-Worst 0.51 (over-provisions); best-calibrated in 26/30 cells.
+- **Risk (Fig 4):** vs LP-Avg, SO-CVaR cuts worst-fold unmet −21% (30/30) and across-fold
+  cost variance −31% (30/30); the tail cut grows with VoLL.
+- **Risk term (Fig 5):** vs the risk-neutral SO (λ=0), SO-CVaR lowers mean OOS unmet −40%
+  (15/15) and tail −19% (15/15) for a +1.2% cost premium (PCM, 15 cells).
+- **Diesel (Fig 6):** breakeven delivered diesel price is 0.78–8.90 $/gal across climates —
+  below even the routine forward-delivery band, so the renewable microgrid wins at any
+  realistic FOB fuel price.
+- **Sizing (SI `si_fig_capacities`):** LP-Worst builds the largest systems; adding PCM
+  displaces battery 38–86% while leaving PV essentially unchanged.
+- **Loss of load / generalization (SI `si_fig_loss_of_load`, `si_fig_generalization`):**
+  electrical loss of load is negligible (≤0.7 kWh/yr); pooled train→test unmet gap is
+  smallest for SO-CVaR (+7.6%) vs LP-Avg (+17.2%, overfits) and LP-Worst (−51.4%).

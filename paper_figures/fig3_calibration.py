@@ -1,5 +1,5 @@
 """
-fig_calibration.py — LEAD reliability result: out-of-sample calibration.
+fig3_calibration.py — LEAD reliability result: out-of-sample calibration.
 
 Does the reliability a method promises at the planning stage actually hold on
 unseen weather years? For each method x architecture x climate we plot the mean
@@ -12,7 +12,7 @@ SO-CVaR sits on the line; LP-Avg sits above (under-provisions); LP-Worst sits fa
 below (over-provisions). Panel (b): per-method test/train unmet ratio (1.0 = calibrated).
 Med VoLL; log-log because climate scales differ ~100x. Loss of load is ~all thermal.
 
-Run:  .\\.venv_verify\\Scripts\\python.exe paper_figures\\fig_calibration.py
+Run:  .\\.venv_verify\\Scripts\\python.exe paper_figures\\fig3_calibration.py
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -49,8 +49,9 @@ axa.fill_between(xs, xs, hi, color=S.METHOD_COLOR["LP_Avg"], alpha=0.06, zorder=
 axa.fill_between(xs, lo, xs, color=S.METHOD_COLOR["LP_Worst"], alpha=0.06, zorder=0)  # below: over-provision
 axa.plot(xs, xs, ls="--", color="0.4", lw=1.1, zorder=2, label="perfect calibration (test = plan)")
 
-axa.text(8, 4500, "under-provisioned\n(test > plan)", fontsize=6.4,
-         color=S.METHOD_COLOR["LP_Avg"], ha="left", va="top", style="italic")
+# annotations sit in the two off-diagonal triangles, clear of the (upper-left) legend
+axa.text(700, 4800, "under-provisioned\n(test > plan)", fontsize=6.4,
+         color=S.METHOD_COLOR["LP_Avg"], ha="center", va="top", style="italic")
 axa.text(4500, 8, "over-provisioned\n(test < plan)", fontsize=6.4,
          color=S.METHOD_COLOR["LP_Worst"], ha="right", va="bottom", style="italic")
 
@@ -78,7 +79,7 @@ arch_h = [Line2D([0], [0], marker="o", linestyle="none", markersize=7,
                  markerfacecolor="0.35", markeredgecolor="black", markeredgewidth=0.5,
                  label=S.ARCH_LABEL["PCM"])]
 line_h = [Line2D([0], [0], ls="--", color="0.4", lw=1.1, label="test = plan")]
-axa.legend(handles=meth_h + arch_h + line_h, loc="lower right", fontsize=6.0,
+axa.legend(handles=meth_h + arch_h + line_h, loc="upper left", fontsize=6.0,
            handletextpad=0.4, labelspacing=0.3, borderaxespad=0.4)
 
 # ============================ Panel (b): ratio ============================== #
@@ -89,8 +90,13 @@ for mm in S.METHOD_ORDER:
     sub = g[g.method == mm]
     xs_j = xpos[mm] + np.linspace(-0.18, 0.18, len(sub))
     c = S.method_color(mm)
-    axb.scatter(xs_j, sub["ratio"], s=22, color=c, edgecolor="black",
-                linewidth=0.4, alpha=0.85, zorder=3)
+    # architecture encoding matches panel (a): PCM filled, No-PCM (PVB) hollow
+    is_pcm = (sub["architecture"] == "PCM").to_numpy()
+    facecolors = [c if p else "white" for p in is_pcm]
+    edgecolors = ["black" if p else c for p in is_pcm]
+    lws = [0.5 if p else 1.1 for p in is_pcm]
+    axb.scatter(xs_j, sub["ratio"], s=24, facecolors=facecolors, edgecolors=edgecolors,
+                linewidths=lws, alpha=0.85, zorder=3)
     med = sub["ratio"].median()
     axb.plot([xpos[mm] - 0.28, xpos[mm] + 0.28], [med, med], color=c, lw=2.4, zorder=4)
     axb.annotate(f"{med:.2f}", (xpos[mm] + 0.30, med), fontsize=6.6, va="center",
@@ -116,22 +122,17 @@ fig.tight_layout(w_pad=1.8)
 out = g.copy()
 med_ratio = g.groupby("method", observed=True)["ratio"].median().reindex(S.METHOD_ORDER)
 caption = (
-    "Out-of-sample reliability calibration across all three value-of-lost-load levels "
-    "(30 climate x architecture x VoLL cells, 10 per method); loss of load is essentially "
-    "all thermal. (a) For each planning method x architecture x climate x VoLL, the mean "
-    "training-year expected unmet "
-    "energy (planned reliability) versus the mean test-year value (delivered "
-    "reliability), over the 5 cross-validation folds; the dashed line is perfect "
-    "calibration (test = plan). Points on the line deliver the reliability they promise; "
-    "points above are under-provisioned out of sample (optimistic), points below are "
-    "over-provisioned (wasteful). Colour = method, marker fill = architecture; log-log "
-    "because climate scales differ ~100x. (b) Per-method test/plan unmet-energy ratio "
-    "across all cells (bar = median; 1.0 = exactly calibrated). SO-CVaR is the "
-    f"best-calibrated method (median ratio {med_ratio['SO_CVaR']:.2f}); the average-year "
-    f"design LP-Avg systematically under-provisions ({med_ratio['LP_Avg']:.2f}, delivers "
-    "more unmet load than planned) and the worst-year design LP-Worst over-provisions "
-    f"({med_ratio['LP_Worst']:.2f}, builds capacity that is not needed out of sample).")
-S.save_fig(fig, "fig_calibration", section="main", data=out, caption=caption)
+    "Out-of-sample reliability calibration across all three VoLL levels "
+    "(30 climate x architecture x VoLL cells, 10 per method); loss of load is "
+    "essentially all thermal. (a) Mean training-year unmet energy (planned) versus "
+    "mean test-year unmet energy (delivered), over the 5 folds; the dashed line is "
+    "perfect calibration (test = plan), with points above it under-provisioned out of "
+    "sample and points below over-provisioned. Colour = method, marker fill = "
+    "architecture; log-log axes (climate scales differ ~100x). (b) Per-method "
+    "test/plan unmet-energy ratio (bar = median; 1.0 = calibrated): SO-CVaR "
+    f"{med_ratio['SO_CVaR']:.2f}, LP-Avg {med_ratio['LP_Avg']:.2f}, LP-Worst "
+    f"{med_ratio['LP_Worst']:.2f}.")
+S.save_fig(fig, "fig3_calibration", section="main", data=out, caption=caption)
 
 print("=== Out-of-sample unmet-energy calibration (test/plan ratio), Med VoLL ===")
 print("median test/plan ratio by method:")
