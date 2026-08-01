@@ -51,25 +51,41 @@ LP-Worst; refer to figures as "Figure N." Do not add any claim not in the draft.
 
 ## Per-section prompts (fresh chat each; attach the one file; paste RULES CARD, then this)
 
-Order: **Methods → Results → Discussion → Conclusion → Introduction → Abstract** (Abstract last).
-
-**Methods** — attach `methods_and_data.md`:
-> "Finalize this Methods section. It's near-final; just polish flow and wording. No structural changes needed."
-
-**Results** — attach `results.md`:
-> "Finalize this Results section. Polish prose, then: (a) add one clause at the first 'N of 30 cells' noting these count consistency-of-direction, not independent replicates (the cells reuse the same 25 weather years); (b) soften 'scaling with the reliability valuation' to 'tending to grow, with exceptions'; (c) if Figures 4 and 5 (loss-of-load, generalization) are cited, keep them; otherwise leave as is."
-
-**Discussion** — attach `discussion.md`:
-> "Finalize this Discussion. Polish and REDUCE redundancy: state each numeric magnitude once (lead on mechanism/interpretation, not a recap of Results). Use one climate-naming convention (place name, e.g. 'Minnesota (continental)') throughout. Keep the Limitations subsection intact."
-
-**Conclusion** — attach `conclusion.md`:
-> "Finalize this Conclusion. Polish only; keep the three research-question answers and the calibration-centered contribution as written. Label the answers RQ1/RQ2/RQ3."
-
-**Introduction** — attach `introduction.md`:
-> "Finalize this Introduction. Polish, then: (a) label the three research questions 'RQ1:', 'RQ2:', 'RQ3:'; (b) reword RQ2 to ask whether PCM's benefit is an architecture-level frontier shift vs an interaction with the sizing method; (c) reword RQ1 so the cost premium is evaluated, not assumed; (d) add one sentence stating what is reused from reference [7] (physical/cost/climate/PCM models) vs new here (CVaR objective, out-of-sample cross-validation, the calibration finding); (e) drop 'reliability' from the RQ3 condition list."
-
-**Abstract** — attach `abstract.md`:
-> "Finalize this Abstract and trim it to ≤200 words. Keep the calibration lead, 'comparable cost,' the λ=0 baseline mention, and the diesel direction ('beats diesel wherever fuel exceeds ~$9/gal'). Split any sentence over ~35 words."
+> You are finalizing one section of a Cambridge Prisms journal paper, "Risk-Aware Capacity
+> Planning and Phase Change Material Storage for Fully Renewable Islanded Microgrids." Produce
+> publication-ready prose. Obey these NON-NEGOTIABLE rules (they were hard-won against the data):
+>
+> **Honest framing (never violate):**
+> 1. Never say the proposed method (SO-CVaR) is *cheaper*. On mean total cost the average-year
+>    design (LP-Avg) is marginally cheapest; SO-CVaR is +0.2–1.5% and below the worst-year design
+>    (LP-Worst). Always "at comparable cost," never "cost saving."
+> 2. Never claim a cost–reliability "knee" (the frontier is ~linear) or that the advantage "grows
+>    with VoLL" on total cost (that holds in only 1/30 cells — do not use it).
+> 3. Method-to-method gaps are within fold-to-fold weather noise; report the *consistent direction
+>    across cells*, and do NOT write "statistically" anything unless a paired test is reported.
+> 4. Loss of load is essentially all thermal (critical/electrical is near-must-served, ≈0).
+> 5. λ=0.9, α=0.9 are fixed a priori (a risk preference), not tuned.
+>
+> **The contribution to lead with:** (a) out-of-sample *calibration* — SO-CVaR delivers the
+> reliability it was planned for, while LP-Avg under-provisions and LP-Worst over-provisions; and
+> (b) the *risk term* beats the risk-neutral stochastic program (λ=0), not just the deterministic
+> heuristics. NOT "coupled planning×storage decisions" (that is largely an architecture effect).
+>
+> **Verified numbers (use these; do not invent):** calibration median test/plan unmet ratio
+> SO-CVaR 1.02 / LP-Avg 1.11 / LP-Worst 0.51 (best-calibrated 29/30 cells); risk-term vs λ=0:
+> −40% mean unmet & −19% tail, 15/15 cells, +1.2% cost (PCM); risk vs LP-Avg: worst-fold unmet
+> −21% & cost variance −31%, 30/30; cost SO-CVaR +0.2–1.5% vs LP-Avg; generalization pooled
+> train→test unmet +17.2% (LP-Avg) / +7.6% (SO-CVaR) / −51.4% (LP-Worst); PCM battery −38–86%,
+> cost −4–14%; diesel break-even $0.78–8.90/gal.
+>
+> **Style:** past tense for Methods/Results; UK spelling (Cambridge Prisms is a UK publisher —
+> use -ise/-our/"behaviour"); one method-naming convention throughout (define SO-CVaR / LP-Avg /
+> LP-Worst at first use and keep the acronyms); refer to figures as "Figure N" (final numbering
+> below); keep the acronym list consistent (VoLL, PCM, PV, CVaR, VaR, CRF).
+>
+> Write only the section requested. Do not add claims beyond the source files. Please output your
+> writing/update of the current section in a google doc file, and keep adding to the same google doc
+> as you are working on more sections (as more steps/prompts being sent).
 
 ---
 
