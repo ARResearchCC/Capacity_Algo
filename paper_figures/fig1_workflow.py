@@ -144,10 +144,10 @@ box(c, MID, BW, 34,
 # --------------------------------------------------------------------------- #
 c = CX[4]
 box(c, 55, BW, 19,
-    "VoLL levels\n(Low / Med / High)\n\nRisk params\n(CVaR α)",
+    "VoLL levels\n(Low / Med / High)\n\nRisk parameters\n(CVaR α)",
     fc="#EDEDED", fs=7, rounding=1.6)
-box(c, 24, BW, 9.5, "Diesel\nbenchmark",
-    fc=S.METHOD_COLOR["Diesel"], ec="black", tc="white", fs=7.5, fw="bold")
+box(c, 23, BW, 13.0, "Define diesel\nbenchmark\n($/gal equivalent)",
+    fc=S.METHOD_COLOR["Diesel"], ec="black", tc="white", fs=6.5, fw="bold")
 
 # --------------------------------------------------------------------------- #
 #  Stage-to-stage arrows (along the spine)
