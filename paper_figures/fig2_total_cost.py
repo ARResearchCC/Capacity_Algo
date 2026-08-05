@@ -111,13 +111,7 @@ handles += [
 ]
 fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.93),
            ncol=7, columnspacing=1.2, handlelength=1.3, handletextpad=0.5)
-fig.text(0.5, 0.90,
-         "Within each climate: bars ordered LP-Avg | LP-Worst | SO-CVaR (colour); "
-         "No-PCM then PCM (hatch); capital (dark) + VoLL penalty (light) = total; "
-         "per-climate y-scales",
-         ha="center", va="top", color="0.35", fontsize=7.5)
-
-fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.87))
+fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.90))
 
 # --------------------------------------------------------------------------- #
 # Printed stats: %Δ mean out-of-sample total cost, SO-CVaR vs LP-Avg / LP-Worst
