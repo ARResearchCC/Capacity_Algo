@@ -1,17 +1,9 @@
-# Python
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
-_pycache_/
 
-# Data & results
-*.csv
-*.xlsx
-
-# Figures
-*.png
-
-# Local environments / project folders
+# --- Virtual environments (never publish) ---
 .venv/
 .venv.lock
 venv/
@@ -19,5 +11,19 @@ venvCap/
 capa_algo/
 .venv_verify/
 
-# Sherlock job logs
+# --- Cluster job logs ---
 logs/
+*.out
+*.err
+
+# --- Redundant raw archives ---
+*.zip
+
+# --- Local archive of superseded / other-scenario code (kept out of the public repo) ---
+Archives/
+
+# NOTE: results (*.xlsx), figures (*.png/*.pdf), plotted values (*.csv) and the
+# NSRDB weather in Data/ are INTENTIONALLY tracked so the repo reproduces the paper.
+# To ship a leaner, code-only repo instead, uncomment the line below and document the
+# NSRDB download in the README (data are public: https://nsrdb.nrel.gov/).
+# Data/

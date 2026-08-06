@@ -1,14 +1,72 @@
-# Capacity_Algo
+# Risk-aware capacity planning for a fully renewable islanded microgrid
 
-CVaR-based capacity planning (`SO_CVaR.py`) for two building scenarios. Use **`FOB.py`** for the Forward Operating Base case and **`DC.py`** for the data center case.
+Code and data for the study of **risk-aware (CVaR) capacity planning with phase-change thermal
+storage (PCM)** for a fully renewable, islanded forward-operating-base (FOB) microgrid
+(PV + battery + heat pump, with and without hot/cold PCM), benchmarked against a diesel genset.
 
-`SO_CVaR.py` is a library module (no `main`); both drivers call `SO_CVaR.SO_CVaR_training()` when the method is `SO_CVaR`.
+Systems are sized by three methods — **LP-Avg** (average training year), **LP-Worst** (worst
+training year), and **SO-CVaR** (risk-averse two-stage stochastic program) — and evaluated
+**out-of-sample** with 5-fold cross-validation over the weather years 1998–2022, across
+**5 climates × 2 architectures × 3 value-of-lost-load (VoLL) levels**.
+
+> 📄 Paper: _<add DOI / link here>_
 
 ---
 
-## 1. Virtual environment
+## Repository layout
 
-From your current folder that looks something like this: (base) PS C:\...\Capacity_Algo>
+| Path | Contents |
+|------|----------|
+| `FOB.py`, `FOB_PVB.py`, `FOB_Diesel.py` | Run drivers — PCM, PV+battery, and diesel-benchmark cases |
+| `SO_CVaR.py`, `SO_CVaR_PVB.py` | Risk-averse (CVaR) stochastic capacity models |
+| `Baseline_CO.py`, `Baseline_CO_PVB.py` | Deterministic LP-Avg / LP-Worst capacity models |
+| `Simulate.py`, `Diesel_Model.py` | Fixed-capacity hourly dispatch; diesel dispatch/cost |
+| `Solar_Generation.py`, `Passive_Model.py`, `Electrical_Load.py` | Input models: PV, building thermal, electrical load |
+| `Data_Conversion.py`, `Gather_input_Locations.py`, `Utility_functions.py` | NSRDB ingestion and input-timeseries assembly |
+| `Input_Parameters.py` | All physical / economic / VoLL parameters |
+| `Data/` | NSRDB weather, 5 sites × 25 years (1998–2022) |
+| `FOB_Sensitivity_Results.xlsx`, `FOB_PVB_Sensitivity_Results.xlsx` | Pre-computed result workbooks (PCM, PV+battery) |
+| `FOB_Diesel_Results/`, `Risk_Sweep_Results/`, `Yearly_Results/` | Diesel, (λ,α) risk-sweep, and input-variability results |
+| `paper_figures/` | Figure pipeline (`main/` = Fig 1–6, `si/` = SI figures) + captions + plotted-value CSVs |
+| `manuscript/` | Paper text (Methods, Results, Discussion, SI, …) |
+| `sherlock/` | SLURM scripts for the (λ,α) risk-parameter sweep |
+
+The pre-computed workbooks are committed, so **the figures can be rebuilt without a solver**.
+
+---
+
+## 1. Rebuild the figures (no solver required)
+
+The figure scripts read the committed result workbooks — no Gurobi needed.
+
+```powershell
+# plotting environment (matplotlib / seaborn / statsmodels)
+py -3 -m venv .venv_verify
+.\.venv_verify\Scripts\Activate.ps1
+pip install matplotlib pandas numpy seaborn statsmodels openpyxl
+
+# build any figure (writes PDF + 600-dpi PNG + CSV + draft caption)
+.\.venv_verify\Scripts\python.exe -X utf8 paper_figures\fig3_calibration.py
+```
+
+Main-text figures and their scripts:
+
+| Figure | Script |
+|--------|--------|
+| Fig 1 — workflow | `paper_figures/fig1_workflow.py` |
+| Fig 2 — out-of-sample cost | `paper_figures/fig2_total_cost.py` |
+| Fig 3 — reliability calibration (lead result) | `paper_figures/fig3_calibration.py` |
+| Fig 4 — risk (tail + cost stability) | `paper_figures/fig4_risk.py` |
+| Fig 5 — risk term vs risk-neutral λ=0 | `paper_figures/fig5_riskterm.py` |
+| Fig 6 — diesel break-even | `paper_figures/fig6_diesel_breakeven.py` |
+
+SI figures are the `paper_figures/si_fig_*.py` scripts (capacities, VoLL sensitivity, risk-parameter
+robustness, generalization, loss of load, cost–reliability frontier, interannual variability).
+See `paper_figures/README.md` for the full manifest and style conventions.
+
+---
+
+## 2. Re-run the model (requires Gurobi)
 
 ```powershell
 py -3 -m venv .venv
@@ -17,74 +75,41 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**Gurobi:** `gurobipy` installs from PyPI, but you need a valid Gurobi license on the machine. All optimization scripts use the `gurobi` solver.
+**Gurobi:** `gurobipy` installs from PyPI but needs a valid Gurobi licence; all optimisation uses
+the `gurobi` solver. Keep `Data/` and `Calibration_Model_Input.xlsx` in the project root.
 
-**Data before running:** keep `Data/` (NSRDB weather) and `Calibration_Model_Input.xlsx` in the project folder.
+| Step | Command | Output |
+|------|---------|--------|
+| Assemble input time series | `python Gather_input_Locations.py` | `Yearly_Results/locations_result.xlsx` |
+| PCM architecture | `python FOB.py` | `FOB_Sensitivity_Results.xlsx` |
+| PV+battery architecture | `python FOB_PVB.py` | `FOB_PVB_Sensitivity_Results.xlsx` |
+| Diesel benchmark | `python FOB_Diesel.py` | `FOB_Diesel_Results/…xlsx` |
+| (λ,α) risk sweep | `sherlock/` SLURM array → collect | `Risk_Sweep_Results/risk_sweep_summary.xlsx` |
 
----
+Each run covers 5 locations × 25 years, 5-fold CV, 3 VoLL levels, and the 3 methods (expect a long
+runtime). To run only SO-CVaR, set `algorithms = ["SO_CVaR"]` at the top of the driver. Then rebuild
+the figures with the plotting environment (Section 1).
 
-## 2. Run SO_CVaR analysis
-
-| Scenario | Script | Main output |
-|----------|--------|-------------|
-| FOB | `python FOB.py` | `FOB_Results/FOB_Sensitivity_Results.xlsx` |
-| DC | `python DC.py` | `DC_Results/DC_Sensitivity_Results.xlsx` |
-
-Each run builds weather/load inputs for 5 locations x 25 years (1998-2022), 5-fold cross-validation, 3 VoLL levels, and 3 methods (`LP_Avg`, `LP_Worst`, `SO_CVaR`). Expect a long runtime.
-
-To run **only** SO_CVaR (fewer solves), edit the top of `FOB.py` or `DC.py`:
-
-```python
-algorithms = ["SO_CVaR"]
-```
-
----
-
-## 3. Parameters (edit in `FOB.py` / `DC.py`)
-
-| Parameter | Meaning |
-|-----------|---------|
-| `locations` | Climate sites: California, Arizona, Alaska, Minnesota, Florida |
-| `weather_year_list` | Training pool of weather years (default 1998-2022) |
-| `fold` | Number of CV folds (default 5; each fold holds out 5 test years) |
-| `VOLL_SCENARIOS` | Low / Med / High **value of lost load** ($/kWh) for HVAC and critical electrical load |
-| `CVAR_ALPHA` | CVaR confidence in (0, 1); tail is worst `(1 - alpha)` share of training years (default from `Input_Parameters.CVaR_alpha`, 0.9) |
-| `CVAR_LAMBDA` | 0 = minimize expected outage cost only; 1 = pure CVaR on outage cost (default 1.0) |
-| `capacity_costs` | `[C_PV, C_PV_OP, C_B, C_B_OP]` ($/kW and $/kWh, capital and O&M); defaults from `Input_Parameters.py` |
-| `data_dir` | Folder with NSRDB files (`Data`) |
-
-**Scenario-specific defaults** (in `Input_Parameters.py`, used inside `SO_CVaR.py`):
-
-| | FOB (`FOB.py`) | DC (`DC.py`) |
-|--|----------------|--------------|
-| Building type | Forward operating base | Data center |
-| Heat pump size | `HPSize` (10 kW) | `HPSize_DC` (100 kW) |
-| Med HVAC VoLL | `HVAC_lol_cost` ($3/kWh) | `HVAC_lol_cost_DC` ($10/kWh) |
-| Med critical VoLL | `lossofloadcost` ($300/kWh) | `lossofloadcost_DC` ($30/kWh) |
+### Result workbook structure
+`Config` · `VoLL_Scenarios` · `Summary` (fold-mean by location/VoLL/method) · `Fold_1…Fold_5`
+(per-fold detail). SO-CVaR rows add three training columns (`Expected Outage Cost`,
+`CVaR Outage Cost`, `CVaR_eta`); LP rows omit them.
 
 ---
 
-## 4. Output
+## 3. Key settings
 
-### Excel (`FOB_Sensitivity_Results.xlsx` / `DC_Sensitivity_Results.xlsx`)
+Physical, economic, VoLL, and CVaR parameters live in `Input_Parameters.py`; the modelling choices
+are documented in `manuscript/` (Methods and SI). Defaults: lifetime 20 yr, discount rate 3%
+(CRF ≈ 0.067); CVaR α = 0.9, λ = 0.9 (fixed a priori; λ = 0 recovers risk-neutral stochastic
+optimisation). VoLL levels (thermal / critical $/kWh): Low $1/$30, Med $3/$100, High $10/$300.
 
-| Sheet | Contents |
-|-------|----------|
-| `Config` | Run settings (scenario, CVaR, folds, methods) |
-| `VoLL_Scenarios` | Low / Med / High VoLL values used |
-| `Summary` | Mean over folds by location, VoLL level, and method |
-| `Fold_1` ... `Fold_5` | Per-fold detail rows |
+## Data
 
-**Important columns for `SO_CVaR` rows:**
+Weather is from the U.S. National Solar Radiation Database (NSRDB), 5 sites spanning distinct
+Köppen–Geiger zones (Alaska, Minnesota, California, Arizona, Florida), 1998–2022, in `Data/`.
+Source: <https://nsrdb.nrel.gov/>.
 
-| Column | Meaning |
-|--------|---------|
-| `PV_Size`, `Battery_Size`, `PCM_Heating_Size`, `PCM_Cooling_Size` | Optimal capacities (kW or kWh) from training |
-| `Training Total Cost` | Annualized objective on training years |
-| `Training Expected Outage Cost` | Mean VoLL-weighted outage cost across training years |
-| `Training CVaR Outage Cost` | CVaR of outage cost (tail risk) |
-| `Training CVaR_eta` | CVaR auxiliary variable (VaR threshold) |
-| `Testing Total Cost` | Simulated cost on held-out test years with fixed training capacities |
-| `Testing HVAC LoL Hours`, `Testing Critical LoL Hours` | Loss-of-load duration on test years |
+## Citation & licence
 
-`LP_Avg` / `LP_Worst` rows omit the three CVaR training columns.
+_<add citation (BibTeX) and a licence (e.g. MIT for code) here before publishing>_

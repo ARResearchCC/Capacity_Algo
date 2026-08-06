@@ -1,0 +1,6 @@
+stage,label,boxes
+1,Data pipeline,NSRDB weather; PV model; thermal/passive model; electrical load model
+2,Sizing methods,LP-Avg; LP-Worst; SO-CVaR
+3,Cross-validation,Five-fold CV; train 20 yr / test 5 yr
+4,Cost & reliability metrics,"Annualized cost; loss of load (h/yr, events/yr); unmet energy (kWh/yr)"
+5,Sensitivities & benchmark,VoLL levels; risk params (CVaR alpha); Diesel benchmark
