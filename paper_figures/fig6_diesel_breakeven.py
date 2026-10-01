@@ -109,16 +109,21 @@ axa.text(np.sqrt(BAND[0] * BAND[1]), 1.3e6,
          ha="center", va="top", fontsize=6.0, color="0.30")
 
 # best-renewable horizontal reference lines + breakeven markers (representative)
-# price labels are offset per-architecture (up-right vs down-left) because the
-# two CA reference levels almost coincide.
+# both price labels sit below the (near-coincident) reference lines, written
+# vertically along the outer side of their own dashed drop line:
+# PCM (lower price) left, PVB right.
 be_rep = be[be.location == REP]
-price_off = {"PVB": (8, 9, "left", "bottom"),
-             "PCM": (8, -11, "left", "top")}
+price_off = {"PVB": (3, 0, "left", "center"),
+             "PCM": (-3, 0, "right", "center")}
+YMIN_A = 3e2
 ren_handles = []
 for _, r in be_rep.iterrows():
     arch = r["architecture"]
     c = S.method_color(r["best_method"])
     axa.axhline(r["best_total"], color=c, lw=1.2, ls="-", alpha=0.9, zorder=3)
+    # dashed drop line from the breakeven point to the x-axis
+    axa.vlines(r["breakeven_usd_per_gal"], YMIN_A, r["best_total"], colors=c,
+               linestyles="--", linewidth=0.8, zorder=3)
     ms = S.marker_style(r["best_method"], arch)
     axa.errorbar(r["breakeven_usd_per_gal"], r["best_total"],
                  xerr=r["breakeven_std"], zorder=6, markersize=7,
@@ -126,8 +131,8 @@ for _, r in be_rep.iterrows():
                  linestyle="none", **ms)
     dx, dy, ha, va = price_off[arch]
     axa.annotate(f"${r['breakeven_usd_per_gal']:.1f}/gal",
-                 (r["breakeven_usd_per_gal"], r["best_total"]),
-                 xytext=(dx, dy), textcoords="offset points",
+                 (r["breakeven_usd_per_gal"], np.sqrt(YMIN_A * r["best_total"])),
+                 xytext=(dx, dy), textcoords="offset points", rotation=90,
                  ha=ha, va=va, fontsize=6.6, color=c, weight="bold")
     ren_handles.append(Line2D([0], [0], color=c, lw=1.2, linestyle="-",
                               label=f"{S.ARCH_LABEL[arch]}, {S.METHOD_LABEL[r['best_method']]}",
@@ -136,7 +141,7 @@ for _, r in be_rep.iterrows():
 axa.set_xscale("log")
 axa.set_yscale("log")
 axa.set_xlim(0.8, PMAX)
-axa.set_ylim(3e2, 2e6)
+axa.set_ylim(YMIN_A, 2e6)
 axa.set_xlabel("Delivered diesel price ($/gal, log)")
 axa.set_ylabel("Total annualized cost ($/yr, log)")
 axa.set_title(f"(a) Cost vs fuel price — {S.CLIMATE_LABEL[REP]}", loc="left")

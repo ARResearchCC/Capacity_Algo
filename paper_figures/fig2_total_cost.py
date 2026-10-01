@@ -16,11 +16,18 @@ VOLL = "Med"                 # representative operating point (HVAC $3, Critical
 ARCHS = ["PVB", "PCM"]       # renewable architectures only
 SCALE = 1000.0               # plot in thousand USD/yr for legible tick labels
 
+# Three independent encodings:
+#   method -> colour | architecture -> hatch | cost component -> opacity
+CAPITAL_ALPHA = 1.0          # capital segment: full-opacity method colour
+PENALTY_ALPHA = 0.45         # VoLL-penalty segment: translucent method colour
+EDGE_LW = 0.6
+matplotlib.rcParams["hatch.linewidth"] = 0.6   # thin, crisp hatch strokes
+matplotlib.rcParams["hatch.color"] = "black"
 
-def lighten(color, f):
-    """Mix `color` a fraction f toward white (0=color, 1=white)."""
-    r, g, b = mcolors.to_rgb(color)
-    return (r + (1 - r) * f, g + (1 - g) * f, b + (1 - b) * f)
+
+def rgba(color, alpha):
+    """Face colour with alpha baked in, so the black edge/hatch stays opaque."""
+    return mcolors.to_rgba(color, alpha)
 
 
 # --------------------------------------------------------------------------- #
@@ -63,7 +70,6 @@ for ax, loc in zip(axes, S.LOCATION_ORDER):
     ymax = 0.0
     for mi, method in enumerate(S.METHOD_ORDER):
         base_c = S.METHOD_COLOR[method]
-        pen_c = lighten(base_c, 0.58)
         for arch in ARCHS:
             x = gx[mi] + arch_dx[arch]
             cap = get(arch, loc, method, "capital_cost_mean") / SCALE
@@ -72,11 +78,14 @@ for ax, loc in zip(axes, S.LOCATION_ORDER):
             sd = get(arch, loc, method, "total_cost_std") / SCALE
             hatch = S.ARCH_HATCH[arch]
             # capital (base)
-            ax.bar(x, cap, width, bottom=0.0, color=base_c, edgecolor="black",
-                   linewidth=0.6, hatch=hatch, zorder=2)
-            # VoLL penalty (lighter tint of same method colour), stacked on top
-            ax.bar(x, pen, width, bottom=cap, color=pen_c, edgecolor="black",
-                   linewidth=0.6, hatch=hatch, zorder=2)
+            ax.bar(x, cap, width, bottom=0.0, facecolor=rgba(base_c, CAPITAL_ALPHA),
+                   edgecolor="black", linewidth=EDGE_LW, hatch=hatch, zorder=2)
+            # VoLL penalty (translucent version of the same method colour), stacked
+            # on top; an opaque white underlay keeps gridlines from showing through
+            ax.bar(x, pen, width, bottom=cap, facecolor="white", edgecolor="none",
+                   linewidth=0, zorder=1.9)
+            ax.bar(x, pen, width, bottom=cap, facecolor=rgba(base_c, PENALTY_ALPHA),
+                   edgecolor="black", linewidth=EDGE_LW, hatch=hatch, zorder=2)
             # across-fold SD on the TOTAL height
             ax.errorbar(x, tot, yerr=sd, fmt="none", ecolor="black",
                         elinewidth=0.8, capsize=2.2, capthick=0.8, zorder=4)
@@ -93,25 +102,38 @@ for ax, loc in zip(axes, S.LOCATION_ORDER):
 axes[0].set_ylabel("Annual total system cost  (thousand USD/yr)")
 
 # --------------------------------------------------------------------------- #
-# Legend: one top row — method (colour) | architecture (hatch) | component (shade)
-# matches the house style used by the sibling reliability figure.
+# Legend: three titled groups across the top —
+#   Method (colour) | Architecture (hatch) | Cost component (opacity)
+# Architecture / component swatches use neutral greys so they carry only their
+# own channel (hatch or opacity), never a method colour.
 # --------------------------------------------------------------------------- #
-handles = [mpatches.Patch(facecolor=S.METHOD_COLOR[m], edgecolor="black",
-                          linewidth=0.6, label=S.METHOD_LABEL[m])
-           for m in S.METHOD_ORDER]
-handles += [
-    mpatches.Patch(facecolor="0.72", edgecolor="black", linewidth=0.6, hatch="",
-                   label="No PCM (PV+battery)"),
-    mpatches.Patch(facecolor="0.72", edgecolor="black", linewidth=0.6, hatch="///",
-                   label="With PCM"),
-    mpatches.Patch(facecolor="0.38", edgecolor="black", linewidth=0.6,
-                   label="Capital"),
-    mpatches.Patch(facecolor=lighten("0.38", 0.58), edgecolor="black",
-                   linewidth=0.6, label="VoLL penalty"),
+ARCH_NEUTRAL = "0.82"        # light grey: solid vs hatched
+COMP_NEUTRAL = "0.30"        # dark grey: full vs reduced opacity
+
+def patch(face, label, hatch=""):
+    return mpatches.Patch(facecolor=face, edgecolor="black", linewidth=EDGE_LW,
+                          hatch=hatch, label=label)
+
+# Positional cues in the labels mirror the layout: architecture entries run
+# left->right like the bar pair; cost entries stack top->bottom like the bar.
+leg_groups = [
+    ("Method", [patch(S.METHOD_COLOR[m], S.METHOD_LABEL[m]) for m in S.METHOD_ORDER],
+     3, 0.21),
+    ("Architecture", [patch(ARCH_NEUTRAL, "PV+battery (left)", S.ARCH_HATCH["PVB"]),
+                      patch(ARCH_NEUTRAL, "With PCM (right)", S.ARCH_HATCH["PCM"])],
+     2, 0.56),
+    ("Cost component", [patch(rgba(COMP_NEUTRAL, PENALTY_ALPHA), "VoLL penalty (top)"),
+                        patch(rgba(COMP_NEUTRAL, CAPITAL_ALPHA), "Capital (bottom)")],
+     1, 0.87),
 ]
-fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.93),
-           ncol=7, columnspacing=1.2, handlelength=1.3, handletextpad=0.5)
-fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.90))
+for title, hs, ncol, xc in leg_groups:
+    leg = fig.legend(handles=hs, title=title, loc="upper center",
+                     bbox_to_anchor=(xc, 1.0), ncol=ncol, columnspacing=1.1,
+                     handlelength=1.6, handleheight=1.0, handletextpad=0.5,
+                     labelspacing=0.3,
+                     title_fontproperties={"weight": "bold", "size": 8})
+    leg._legend_box.align = "center"
+fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.86))
 
 # --------------------------------------------------------------------------- #
 # Printed stats: %Δ mean out-of-sample total cost, SO-CVaR vs LP-Avg / LP-Worst
@@ -151,12 +173,15 @@ plotted = plotted.sort_values(["location", "method", "architecture"])
 
 caption = (
     "Out-of-sample annual total system cost by climate for the two renewable "
-    "architectures (PV+battery; hatched = with phase-change thermal storage) under "
-    "the three sizing methods (colour). Each bar is the mean over the 5 test years "
-    "and 5 cross-validation folds, split into annualized capital (solid shade) and "
-    "unmet-load VoLL penalty (light shade); thin bars are +/-1 SD across folds. VoLL "
-    "is at the representative Med level (HVAC $3/kWh, critical $100/kWh). Note the "
-    "independent per-climate y-axes (thousand USD/yr)."
+    "architectures under the three sizing methods (color). Within each method, the "
+    "left bar is PV+battery (solid) and the right bar adds phase-change material (PCM) "
+    "thermal storage (hatched). Each bar is stacked into annualized capital cost "
+    "(bottom, full color) and the value-of-lost-load (VoLL) penalty for unmet load "
+    "(top, translucent shade of the same color). Bars show the mean over the 5 test "
+    "years and 5 cross-validation folds; whiskers are +/-1 standard deviation of total "
+    "cost across folds. VoLL is at the representative Med level (thermal $3/kWh, "
+    "critical electrical $100/kWh). Note the independent per-climate y-axes "
+    "(thousand USD/yr)."
 )
 
 S.save_fig(fig, "fig2_total_cost", section="main", data=plotted, caption=caption)

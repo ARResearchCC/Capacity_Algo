@@ -27,13 +27,16 @@ def cell(loc, method, arch):
     return LUT.get((loc, method, arch))
 
 # --------------------------------------------------------------------------- #
-# Panel spec: (metric key, electrical col, thermal col, y-axis label)
+# Row spec: (column, y-axis label, shared y across climates?)
+# Thermal rows use per-climate y-scales; electrical rows share one y-scale
+# across climates (values are tiny and exactly zero in most climates, so a
+# per-climate autoscale would exaggerate noise).
 # --------------------------------------------------------------------------- #
-PANELS = [
-    ("energy", "electric_unmet_kwh", "thermal_unmet_kwh",
-     "Exp. annual unmet\nenergy (kWh/yr)"),
-    ("worst",  "critical_worst_event_h", "hvac_worst_event_h",
-     "Worst single outage\nevent (h)"),
+ROWS = [
+    ("thermal_unmet_kwh",      "Thermal unmet\nenergy (kWh/yr)",    False),
+    ("hvac_worst_event_h",     "Thermal worst\noutage event (h)",   False),
+    ("electric_unmet_kwh",     "Electrical unmet\nenergy (kWh/yr)", True),
+    ("critical_worst_event_h", "Electrical worst\noutage event (h)", True),
 ]
 
 # slot geometry: 6 slots (method-major, arch-minor), grouped by method
@@ -46,16 +49,22 @@ for i, (m, a) in enumerate(SLOTS):
     x += 1.0
     if a == S.ARCH_ORDER[-1] and i != len(SLOTS) - 1:
         x += GROUP_GAP     # gap after each method's last arch
-SW = 0.40                  # sub-bar width
-DX = SW / 2 + 0.02         # electrical/thermal offset within a slot
+SW = 0.78                  # bar width (one bar per slot)
 XLIM = (min(pos.values()) - 0.7, max(pos.values()) + 0.7)
+ERR_KW = dict(elinewidth=0.7, capsize=1.6, capthick=0.7, ecolor="0.25")
+
+def top(r, col):
+    m, s = getattr(r, f"{col}_mean"), getattr(r, f"{col}_std")
+    return m + (s if np.isfinite(s) else 0.0)
 
 # --------------------------------------------------------------------------- #
-# Figure
+# Figure: 4 rows (thermal energy, thermal worst event, electrical energy,
+# electrical worst event) x 5 climates
 # --------------------------------------------------------------------------- #
-fig, axes = plt.subplots(2, 5, figsize=(S.DOUBLE_COL, 5.4))
+fig, axes = plt.subplots(len(ROWS), 5, figsize=(S.DOUBLE_COL, 8.6))
 
-for ri, (pkey, ecol, tcol, ylab) in enumerate(PANELS):
+for ri, (col, ylab, shared) in enumerate(ROWS):
+    row_max = max(top(r, col) for r in LUT.values())
     for ci, loc in enumerate(S.LOCATION_ORDER):
         ax = axes[ri, ci]
         ymax = 0.0
@@ -64,29 +73,20 @@ for ri, (pkey, ecol, tcol, ylab) in enumerate(PANELS):
                 r = cell(loc, m, a)
                 if r is None:
                     continue
-                p = pos[(m, a)]
-                em, es = getattr(r, f"{ecol}_mean"), getattr(r, f"{ecol}_std")
-                tm, ts = getattr(r, f"{tcol}_mean"), getattr(r, f"{tcol}_std")
-                bs = S.bar_style(m, a)
-                # thermal (right, solid) = the dominant service
-                ax.bar(p + DX, tm, width=SW, yerr=ts,
-                       error_kw=dict(elinewidth=0.7, capsize=1.6,
-                                     capthick=0.7, ecolor="0.25"),
-                       zorder=3, **bs)
-                # electrical (left, translucent) = critical service (~0 here)
-                es_bs = dict(bs); es_bs["alpha"] = 0.42
-                ax.bar(p - DX, em, width=SW, yerr=es,
-                       error_kw=dict(elinewidth=0.7, capsize=1.6,
-                                     capthick=0.7, ecolor="0.25"),
-                       zorder=3, **es_bs)
-                ymax = max(ymax, tm + (ts if np.isfinite(ts) else 0),
-                           em + (es if np.isfinite(es) else 0))
+                ax.bar(pos[(m, a)], getattr(r, f"{col}_mean"), width=SW,
+                       yerr=getattr(r, f"{col}_std"), error_kw=ERR_KW,
+                       zorder=3, **S.bar_style(m, a))
+                ymax = max(ymax, top(r, col))
 
         # cosmetics
         S.despine(ax)
         S.ygrid(ax)
         ax.set_xlim(*XLIM)
-        ax.set_ylim(0, ymax * 1.20 if ymax > 0 else 1)
+        lim = row_max if shared else ymax
+        ax.set_ylim(0, lim * 1.20 if lim > 0 else 1)
+        if ymax == 0:
+            ax.text(0.5, 0.5, "none\n(zero in all\nfolds)", transform=ax.transAxes,
+                    ha="center", va="center", fontsize=6.6, color="0.45")
         ax.set_xticks([])
         ax.tick_params(axis="y", labelsize=7, pad=1.5)
         ax.margins(x=0)
@@ -96,45 +96,49 @@ for ri, (pkey, ecol, tcol, ylab) in enumerate(PANELS):
             ax.set_ylabel(ylab, fontsize=8.5)
 
 # --------------------------------------------------------------------------- #
-# Legend: methods (colour) | architecture (hatch) | service (solid/faded)
+# Legend: methods (colour) | architecture (hatch)
 # --------------------------------------------------------------------------- #
 meth_h = [Patch(facecolor=S.METHOD_COLOR[m], edgecolor="black", linewidth=0.6,
                 label=S.METHOD_LABEL[m]) for m in S.METHOD_ORDER]
 arch_h = [Patch(facecolor="0.82", edgecolor="black", linewidth=0.6,
                 hatch=S.ARCH_HATCH[a], label=S.ARCH_LABEL[a])
           for a in S.ARCH_ORDER]
-serv_h = [Patch(facecolor="0.45", edgecolor="black", linewidth=0.6,
-                label="Thermal / HVAC (right bar)"),
-          Patch(facecolor="0.45", edgecolor="black", linewidth=0.6, alpha=0.42,
-                label="Electrical / critical (left bar)")]
 
-leg = fig.legend(handles=meth_h + arch_h + serv_h,
-                 loc="upper center", bbox_to_anchor=(0.5, 1.005),
-                 ncol=7, fontsize=7.3, handlelength=1.4, handleheight=1.2,
+leg = fig.legend(handles=meth_h + arch_h,
+                 loc="upper center", bbox_to_anchor=(0.5, 1.0),
+                 ncol=5, fontsize=7.3, handlelength=1.4, handleheight=1.2,
                  columnspacing=1.1, borderaxespad=0.0)
 
-fig.text(0.5, 0.945,
+fig.text(0.5, 0.968,
          "Within each climate: bars ordered LP-Avg | LP-Worst | SO-CVaR "
-         "(colour); No-PCM then PCM (hatch); per-climate y-scales",
+         "(colour); No-PCM then PCM (hatch). Thermal rows: per-climate y-scales; "
+         "electrical rows: common y-scale",
          ha="center", va="top", fontsize=6.6, color="0.35")
 
-fig.tight_layout(rect=(0, 0, 1, 0.915), w_pad=0.7, h_pad=1.4)
+fig.tight_layout(rect=(0, 0, 1, 0.952), w_pad=0.7, h_pad=1.2)
+
+# thin rule separating the thermal block from the electrical block
+y_sep = (axes[1, 0].get_position().y0 + axes[2, 0].get_position().y1) / 2
+fig.add_artist(plt.Line2D([0.02, 0.98], [y_sep, y_sep], color="0.6",
+                          lw=0.6, ls="-", transform=fig.transFigure))
 
 # --------------------------------------------------------------------------- #
 caption = (
     "Out-of-sample loss of load by climate for the renewable architectures "
     "(No-PCM PV+battery vs PCM) under each capacity-planning method, at the Med "
-    "VoLL operating point (thermal $3/kWh, critical $100/kWh). Top: expected "
-    "annual unmet energy (kWh/yr), derived as penalty divided by VoLL; bottom: "
-    "worst single-outage-event duration (h) -- a tail-SEVERITY proxy, not the "
-    "quantity SO-CVaR optimises (the objective minimises the CVaR of the "
-    "energy-weighted VoLL penalty, not event duration). Each panel shows the "
-    "electrical/critical service (left, translucent) and thermal/HVAC service "
-    "(right, solid) side by side; bars are grouped by method (colour) and "
-    "architecture (hatch). Values are test-split means over 5 test years then 5 "
-    "folds; error bars are +/-1 SD across folds. Note the per-climate y-scales "
-    "(cold->hot). Electrical/critical loss of load is negligible everywhere "
-    "(<=0.7 kWh/yr and <=1.2 h); essentially all unmet load is thermal, and "
+    "VoLL operating point (thermal $3/kWh, critical $100/kWh). Rows 1-2: "
+    "thermal/HVAC service; rows 3-4: electrical/critical service. For each "
+    "service, the first row is expected annual unmet energy (kWh/yr), derived as "
+    "penalty divided by VoLL, and the second is worst single-outage-event "
+    "duration (h) -- a tail-SEVERITY proxy, not the quantity SO-CVaR optimises "
+    "(the objective minimises the CVaR of the energy-weighted VoLL penalty, not "
+    "event duration). Bars are grouped by method (colour) and architecture "
+    "(hatch). Values are test-split means over 5 test years then 5 folds; error "
+    "bars are +/-1 SD across folds. Thermal rows use per-climate y-scales "
+    "(cold->hot); electrical rows share one y-scale across climates. "
+    "Electrical/critical loss of load is zero in Polar, Continental and Arid "
+    "climates and negligible elsewhere (<=0.7 kWh/yr and <=1.2 h, PCM designs "
+    "in Marine and Tropical only); essentially all unmet load is thermal, and "
     "SO-CVaR lowers thermal unmet ENERGY relative to LP-Avg in every climate. On "
     "worst-event DURATION the ordering is not monotone -- e.g. in Marine (CA) "
     "with PCM SO-CVaR's worst event is longer than LP-Avg's -- because duration "

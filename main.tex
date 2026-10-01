@@ -1,0 +1,260 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% To select a journal, use its code for the 
+% journal= option in the \documentclass command.
+% The journal codes for this template are:
+
+% Cambridge Prisms: pri
+% Research Directions: rdi
+% Computational Humanities Research: chr
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[
+  journal=large,
+  manuscript=article-type,
+  year=2020,
+  volume=37,
+]{cup-journal}
+
+\setcounter{biburllcpenalty}{7000}   % allow breaks at lowercase letters
+\setcounter{biburlucpenalty}{8000}   % ...and uppercase (for ARResearchCC, Capacity_Algo)
+\setcounter{biburlnumpenalty}{9000}  % ...and digits
+
+\usepackage{amsmath}
+\usepackage[nopatch]{microtype}
+\usepackage{booktabs}
+
+\usepackage{xurl}
+
+\title{Risk-Aware Capacity Planning and Phase-Change-Material Storage for Maintaining Reliability at Low Cost in Fully-Renewable Islanded Microgrids}
+
+\author{Yuanbei F. Fan}
+\affiliation{Department of Civil and Environmental Engineering, Stanford University, Stanford, CA, USA}
+\email[Yuanbei F. Fan]{yf1098@stanford.edu}
+
+\author{Muyan Jiang}
+\affiliation{Department of Industrial Engineering and Operations Research, University of California, Berkeley, CA, USA}
+
+\author{Daniel J. Sambor}
+\affiliation{Department of Civil and Environmental Engineering, Stanford University, Stanford, CA, USA}
+
+\author{Andreas M{\"u}hlbauer}
+\affiliation{Department of Civil and Environmental Engineering, Stanford University, Stanford, CA, USA}
+
+\author{Jill G. Ferguson}
+\affiliation{Department of Civil and Environmental Engineering, Stanford University, Stanford, CA, USA}
+
+\author{Mark Z. Jacobson}
+\affiliation{Department of Civil and Environmental Engineering, Stanford University, Stanford, CA, USA}
+
+\addbibresource{reference.bib}
+
+\keywords{capacity planning, islanded microgrid, thermal energy storage, conditional value-at-risk, diesel replacement} %% First letter not capped
+
+\begin{document}
+
+\begin{abstract}
+Remote areas often depend on diesel fuel's costly supply chains for electricity generation. Fully renewable islanded microgrids remove that dependence but face a reliability--cost dilemma. This study examines whether risk-aware capacity planning methods and heat pumps with phase-change-material (PCM) thermal energy storage can ease that dilemma. The study is applied to military forward operating bases, though results are applicable to disaster relief zones, remote communities, and off-grid data centers. A photovoltaic--battery--heat-pump system with and without PCM thermal storage was sized in three ways --- average-year (LP-Avg) and worst-year (LP-Worst) linear programming optimization,  and conditional-value-at-risk stochastic optimization (SO-CVaR) --- then evaluated out of sample by five-fold cross-validation over 25 weather years in five climate zones. In testing, SO-CVaR delivered closest to optimal reliability, reduced the worst-case loss of load by 21\%, and stabilized year-to-year cost by 31\%, though only cost 1\% more than the lowest-cost design (LP-Avg). PCM further reduced battery capacity by 38-86\% across climates and lowered total cost by 4-14\%. Renewable microgrid became the cheaper option than diesel microgrid once delivered fuel exceeded \$0.78-8.90/gal depending on climate, a break-even far below the cost of fuel delivered to remote sites.
+\end{abstract}
+
+\section*{Impact Statement}
+
+Remote communities, disaster-response sites, and military outposts usually rely on diesel generators fed by a costly and sometimes dangerous stream of fuel deliveries. Solar-and-battery systems can cut that dependence, but only if they are sized to stay reliable through unusual weather years without becoming unaffordable. This study shows that common shortcuts for sizing them misjudge that risk — some leave the site short in bad years, others overspend guarding against them — whereas a risk-aware method delivers, on weather it has never seen, close to the reliability it promised, at comparable cost. It also shows that phase-change materials, which store energy as heat rather than in batteries, are a cheaper way to hold it — lowering overall cost and reducing the battery capacity a renewable site needs to replace diesel. 
+
+
+% \section*{Plain Language Summary}
+% \textit{Computational Humanities Research} (CHR) requires a Plain Language summary (<500 words explaining research goals, methods, and findings in non-technical teams) alongside the Abstract. Comment out this section if not submitting to CHR.
+
+\section{Introduction}
+
+Power grids are vulnerable to disruption from extreme weather and aging or damaged infrastructure, and many facilities operate in remote areas where a dependable grid connection is limited or absent. For applications such as military forward operating bases (FOB), remote communities, or data centers, prolonged outages carry severe consequences and there is a clear need for greater energy resilience. Microgrids can address this need. A microgrid is a group of interconnected loads (e.g. heat pumps) and distributed energy resources (solar photovoltaics (PV) and batteries) within clearly defined electrical boundaries that acts as a single controllable entity and can operate either connected to or independently from the main grid \parencite{ref2}. By coordinating local generation, energy storage, and demand through smart controls, it strengthens resilience in either mode \parencite{ref1}.
+
+\CUPTWOCOL 
+%%% END OF FIRST PAGE IN LARGE-LAYOUT NEEDS TO BE MARKED. This commands does nothing in medium and small layouts. %%%
+
+Diesel-powered microgrids remain the incumbent solution for many military FOBs, remote communities, disaster-relief operations, hospitals, and data centers. Diesel generators are dispatchable, technologically mature, and deployable \parencite{ref3,ref4}. Their reliability, however, particularly in the case of FOBs, depends on continuous fuel availability. Protection of fuel transports to isolated FOBs increases the loss of life, cost, and environmental burden of diesel, while disruptions to fuel supply chains can directly threaten energy availability \parencite{ref3,ref5}. At such bases, fuel-resupply activities can risk personnel and logistical assets and divert resources from mission activities \parencite{ref3}. Diesel systems require recurring maintenance and careful generator dispatch, because inefficient loading and cycling increase fuel consumption and operational burden \parencite{ref4}. Diesel generation therefore does not eliminate energy-security risk; it transfers a substantial portion of that risk to fuel logistics, equipment availability, and sustained maintenance.
+
+The primary problem addressed in this study is whether a fully-renewable islanded microgrid can provide reliable electrical and thermal service under uncertain future conditions while remaining economically competitive with diesel-based power. Renewable electricity generation and energy storage can reduce dependence on transported fuel, lower life-cycle emissions and improve local energy self-sufficiency \parencite{ref5,ref6}. Recent studies further indicate that renewable microgrids can reduce cost relative to diesel in some remote applications \parencite{ref6,ref7}. Eliminating diesel backup, however, transfers the reliability challenge from fuel availability to the matching of intermittent renewable generation with variable energy demand. Solar resource availability, electrical demand and heating and cooling loads vary across hours, seasons and years, while generation and storage technologies have finite power and energy capacities \parencite{ref7,ref8}. A system designed using favorable or limited historical conditions may therefore experience a blackout (loss of load) at some time during an adverse weather year, whereas a system designed around the most extreme weather year may require excessive investment.
+
+This study addresses this reliability--cost challenge through two complementary approaches: risk-aware capacity planning using conditional-value-at-risk (CVaR) stochastic optimization to represent interannual uncertainty, and phase-change-material (PCM) thermal storage to increase flexibility in serving heating and cooling demand. The premise is that risk-aware planning prevents capacities from being determined by unrepresentative historical years, while PCM reduces the electrical storage required to maintain thermal service during renewable shortages.
+
+The first gap concerns whether risk-aware sizing of islanded renewable systems delivers the reliability it promises on weather it has not seen. Optimal sizing of stand-alone and hybrid renewable systems is a mature field, and most studies minimize levelized or life-cycle cost subject to a reliability index, such as loss-of-power-supply probability, using heuristic, metaheuristic or software-based tools \parencite{ref28,ref31}. Most studies use weather and load data with reduced temporal details, such as a single historic year, a typical meteorological year, hourly averaging, or a small set of representative days. Though these formulations remain tractable, temporal reduction can materially change generation and storage decisions by smoothing demand peaks, masking prolonged renewable shortages and extreme conditions, and distorting chronological storage behavior \parencite{ref9,ref10,ref11,ref12}. Single-year formulations have been shown to mis-estimate both the size and reliability of off-grid systems exposed to multi-year variability \parencite{ref31}. A permanently islanded system is especially exposed, having neither a grid connection nor, in the fully renewable case, a dispatchable generator to carry it through an adverse year. Robust and distributionally-robust formulations protect against worst-case realizations or distributional ambiguity \parencite{ref13,ref14}. The closest study to ours imposes a bound on the risk of loss of load in stand-alone microgrid sizing \parencite{ref24}, whereas risk here enters the objective as a tunable CVaR term. Conventional stochastic programming is less conservative, yet its expected-value objective underweights the infrequent loss-of-load events that dominate risk, and diesel generation is often added as backup \parencite{ref8}. CVaR offers a tunable middle ground and has been applied to integrated energy-system, multi-energy and hosting-capacity planning \parencite{ref15,ref16,ref17,ref25} and to microgrid operation and scheduling \parencite{ref26,ref27}. Studies using CVaR often design for applications that are predominantly grid-connected or market-participating systems for hedging cost or profit; however,  in islanded microgrid applications, CVaR is used as a post-hoc evaluation metric \parencite{ref32} or hedges operational-cost tails within a siting problem \parencite{ref33}. There is a gap in the literature testing whether CVaR can design reliable systems out of sample for a fully renewable, permanently islanded microgrid whose flexibility comes from battery and PCM thermal storage rather than fossil-fuel combustion.
+
+The second gap concerns whether PCM thermal storage can improve out-of-sample reliability and reduce cost of an optimized renewable microgrid. PCM stores and releases large quantities of latent heat over a narrow temperature range at roughly two to three times the volumetric energy density of sensible-heat storage, enabling thermal load shifting, peak-demand reduction, and greater operating flexibility \parencite{ref29,ref30}. At the component and demand-flexibility level, PCM has been used to shift heat-pump electricity consumption, improve peak-shifting in latent-heat and cascade systems, and provide dedicated cold-side storage for cooling \parencite{ref18,ref19,ref20,ref21,ref22}. Performance depends on transition temperature relative to the heat-pump operating range, charging and discharging rates, thermal conductivity and losses, and heat pump integration \parencite{ref19,ref20,ref21,ref22,ref30}. Applications within microgrids remain limited: Verdugo et al. established its value at the dispatch level in a thermoelectric microgrid \parencite{ref23}, M\"uhlbauer et al. minimized the multi-decadal cost of islanded renewable microgrids with PCM across climate zones \parencite{ref7}, and islanded multi-energy sizing studies have begun to include thermal storage alongside electrical storage \parencite{ref32}. It remains unclear whether PCM chiefly lowers cost and loss of load, or shifts the cost--reliability frontier outward, and whether any such benefit persists on unseen weather years.
+
+To close both gaps, we size two architectures --- a solar PV--battery--heat-pump system and an otherwise identical system with hot and cold PCM storage --- using three planning methods: an average-capacity benchmark using linear programming (LP-Avg), taking the mean of capacities optimized independently for each historical year; a conservative highest-cost-year benchmark using linear programming (LP-Worst); and CVaR-based stochastic optimization (SO-CVaR). The study builds upon the modeling platform of M\"uhlbauer et al. \parencite{ref7}, reusing its physics-based generation and load pipeline, techno-economic data, climate sites and PCM representation. However, rather than seeking the least-cost multi-decadal design, this study investigates whether a design can be sized to remain reliable on unseen weather years it was not built from. Fixing the physical model isolates the effect of the risk-aware objective and of PCM. Every design is evaluated out of sample by five-fold cross-validation over 25 years of weather and load data (1998--2022) across five climate zones, with a diesel microgrid as the economic reference.
+
+Overall, this study assesses whether SO-CVaR designs are better calibrated for reliability than the benchmarks of LP (i.e., whether the loss of load the design suffers on unseen weather matches what occurred when sized on the training weather data, as opposed to systematically over- or under-serving it). This study also analyzes whether adding PCM under risk-aware planning improves reliability and lowers cost of a fully renewable microgrid compared with a diesel microgrid by evaluating a break-even delivered fuel price. The main text presents the modelling logic and the elements specific to the study's contribution (Methods, Results, Discussion, and Conclusion in Sections 2-5, respectively); the full data-generation pipeline, all equations, and all numerical parameters are given in the Supplementary Information (SI).
+
+\section{Methods and data}
+
+This study evaluated fully renewable islanded microgrids for a FOB and benchmarked them against a diesel-generation baseline. Two matched renewable architectures --- a solar PV--battery--heat-pump system, and an otherwise identical system including hot and cold PCM thermal storage --- were each sized with three capacity-planning approaches and stress-tested against a quarter-century of interannual weather and load variability across five climate zones. A schematic diagram of the modeling process is shown in Figure~\ref{fig:workflow}.
+
+\begin{figure*}
+\centering
+\includegraphics[width=\linewidth]{fig1_workflow.pdf}
+\caption{Analysis workflow. U.S. National Solar Radiation Database (NSRDB) weather drives solar photovoltaic (PV), thermal/passive, and electrical-load models; the resulting time series feed three capacity-sizing methods (LP-Avg, LP-Worst, and the highlighted SO-CVaR), each evaluated under five-fold cross-validation (20 training years / 5 test years per fold). Test-split annualized cost and reliability metrics (loss of load in h/yr and events/yr; unmet energy in kWh/yr) are reported, with sensitivities over value of lost load (VoLL) levels and CVaR risk parameters and a diesel microgrid benchmark (in \$/gal equivalent fuel price for renewable microgrid to breakeven on a lifetime cost basis).}
+\label{fig:workflow}
+\end{figure*}
+
+\subsection{System architectures and costs}
+
+Both architectures served the FOB's critical electrical load and its heating and cooling demand. The baseline paired PV and battery storage with a single electric heat pump serving both heating and cooling; the second added hot and cold PCM storage that charged and discharged through the heat-pump and cooling loops, decoupling heat-pump operation from instantaneous thermal demand. PV, battery and, where present, hot and cold PCM capacities were the decision variables; the heat pump was fixed at a nominal 10 kW electrical rating sufficient to meet demand. Capital costs were annualized with a capital-recovery factor (CRF) and combined with fixed operating costs; unmet load adds to the operating costs using the value of lost load (VoLL). \parencite{ref39}, guided by the LBNL Interruption Cost Estimate Calculator and the microgrid VoLL literature \parencite{ref40,ref41,ref42,ref43}. A sensitivity analysis was performed across low, medium, and high levels (SI Section S4). Techno-economic parameters and the annualization model are given in SI Section S3.
+
+\subsection{Weather, resource and load data}
+
+Five representative sites in the United States (U.S.), spanning distinct K\"oppen--Geiger climate zones (temperate/marine (mild winter) in California (CA), subarctic (polar) in Alaska (AK), arid (dry) in Arizona (AZ), continental (cold winter) in Minnesota, tropical (humid) in Florida (FL)), were chosen to cover most possible solar and thermal conditions \parencite{ref34} (SI Sections S1). Hourly meteorological data for 1998--2022 were drawn from the U.S. National Solar Radiation Database (NSRDB) \parencite{ref35}, or 125 location-years (5 sites $\times$ 25 years), to retain seasonal structure and interannual variability. A physics-based pipeline converted each location-year into three time-synchronised inputs: a PV profile computed with pvlib using the Fuentes cell-temperature model \parencite{ref36,ref37}; heating and cooling thermal demand from a passive heat-transfer model calibrated for the FOB structure \parencite{ref38}; and a critical electrical load profile from an occupancy-driven probabilistic model, seeded distinctly per year for reproducibility.
+
+\subsection{Capacity-planning approaches}
+
+Three planning methods sized each architecture, sharing identical hourly dispatch physics (energy balances for PV, battery, heat pump, PCM and load; storage state dynamics; power and energy limits) and differing only in how interannual uncertainty entered the sizing decision. LP-Avg solved a deterministic cost-minimizing problem for each training year and adopted the mean of the per-year optimal capacities. LP-Worst adopted the capacities from the single most costly training year. SO-CVaR treated each training year as a scenario ($s$) with shared first-stage capacities and scenario-specific dispatch, and minimized annualized capacity cost plus a convex combination of expected and tail outage cost:
+\begin{equation*}
+\begin{aligned}
+\min\ \ & C_{\mathrm{cap}} + (1-\lambda)\tfrac{1}{N} \textstyle\sum_s Z_s + \lambda\left[\eta + \tfrac{1}{(1-\alpha)N}\textstyle\sum_s \xi_s\right], \\
+\text{subject to}\ \ & \xi_s \geq Z_s - \eta,\quad \xi_s \geq 0;
+\end{aligned}
+\end{equation*}
+the second term defines typical stochastic optimization, lambda defines how much of the stochastic optimization vs the conditional value at risk (third time) to weigh.
+
+where $Z_s$ is the annual VoLL-weighted unmet-load cost in scenario ($s$) and followed by the value at risk term defined by risk parameters: confidence $\alpha$, linearised following Rockafellar and Uryasev \parencite{ref44} ($\eta$ is the value-at-risk (VaR) auxiliary variable and $\xi_s$ the tail excess). The weight $\lambda \in [0, 1]$ sets how strongly the design responds to the adverse tail: it places weight $(1-\lambda)$ on the expected outage cost and $\lambda$ on the CVaR term, so $\lambda = 0$ would recover expected-cost (risk-neutral) stochastic optimization and $\lambda = 1$ would be solely CVaR. Throughout this study, $\alpha = 0.9$ and $\lambda = 0.9$ were chosen; thus, the design was driven primarily by the worst 10\% of training-year outcomes. These values were fixed a priori as a risk posture appropriate to a mission-critical base, not tuned to the data ($\alpha = 0.9$ is the finest tail resolvable at $N \approx 20$ training years, i.e. two tail scenarios; a robustness check varying both is reported in the SI Section S6). To separate the value of the risk term from that of stochastic optimization itself, SO-CVaR ($\lambda = 0.9$) was additionally compared against the risk-neutral stochastic baseline ($\lambda = 0$ in the same model) across the five climates and three valuations. SI Section S8 includes the comparison to risk-neutral stochastic baseline. SI Section S5 includes the full optimization formulations and constraints.
+
+\subsection{Out-of-sample evaluation and diesel benchmark}
+
+Out-of-sample performance was assessed by five-fold cross-validation over the 25 weather years, partitioned into five contiguous five-year blocks. In each fold, capacities were fixed on the 20 training years and re-simulated on the five held-out years to isolate behavior under unseen conditions (SI Section S7). The primary metric was annual total system cost: annualized capacity cost plus VoLL penalties for unmet load. Renewable systems had only fixed O\&M (no fuel cost and thus no variable O\&M). Also reported were the duration and severity of electrical and thermal loss of load, measured as total hours, number of distinct events, and worst single-event duration, and averaged over test years and folds (SI Section S7).
+
+Reliability was quantified for each design, method, and fold, as the calibration ratio: the unmet load delivered on the five held-out test years divided by the unmet load obtained when the same fixed capacities are re-simulated on the 20 training years. A ratio of 1 matched out-of-sample reliability with the planning estimate (a value $>1$ resulted in more unmet load than planned). The median calibration ratio and the mean absolute deviation (from 1) across cells were reported (SI Section S7). Two additional risk statistics were calculated per cell: the worst-fold unmet load, a coarse proxy for the reliability tail, and the standard deviation of total cost across folds, a measure of cost stability across weather years.
+
+A diesel-only system serving the identical load over the same sites and years provided the economic reference: a single generator supplied all electricity, including the same heat pump, with no PV, battery, or PCM. Because diesel dispatch has no storage, and therefore no coupling between time steps, its sizing and dispatch were computed directly rather than by optimization, with capacity set to peak demand plus a reserve margin, and fuel use following a standard load-dependent generator model (SI Section S8). Since delivered fuel dominates the cost of remote diesel microgrids, the delivered price was varied over the fully-burdened cost of fuel (FBCF) for resupply, spanning secure supply to contested front-line conditions, at \$13/gal for peacetime forward ground delivery, \$45/gal for a protected convoy, and \$400/gal for contested or remote resupply \parencite{ref45,ref46,ref47}. To compare diesel and renewable microgrid designs, a break-even delivered diesel price was calculated. A goal of renewable microgrid design is to achieve a break-even price below the current price of diesel fuel.
+
+\section{Results}
+
+Across all climate--architecture combinations, the three methods produced similar costs but differed substantially in reliability calibration, varying primarily based on thermal demand met (presented in the following three sub-sections).  A grid of 30 climate--architecture--VoLL combinations was calculated, with each result termed a cell. Within each cell, every method was sized on 20 weather years and tested on the 5 held-out years, repeated five times (each year held out exactly once). The five folds' outcomes were then averaged into the one value reported for that cell (the sole exception is the tail statistic of Section 3.4, which takes the worst of the five folds rather than their mean). Each result was calculated as an out-of-sample average, on unseen weather years.
+
+\subsection{Sized capacities}
+
+The energy system technology capacities were sized by each of the methods with intuitive results: LP-Worst built the largest systems, LP-Avg the smallest, and SO-CVaR fell in between. In cold climates, SO-CVaR's energy storage capacity matched LP-Avg rather than LP-Worst's over-built capacity; for example in a sub-arctic climate, battery capacity rose only marginally from LP-Avg to SO-CVaR (72.4 to 73.2 kWh, +1\%) before jumping by 31.9\% at LP-Worst (95.5 kWh). LP-Worst's design capacity was also the least stable across folds, with the largest sizing variance on nearly every component. Adding PCM displaced battery capacity, which was reduced by 38--86\%, with the largest reduction in cold climates (MN). PV capacity did not change significantly with the addition of PCM, it was slightly reduced in cold climates (AK and MN). The optimizer selected the physically appropriate thermal store unprompted: hot PCM in the heating-dominated climates, cold PCM in the tropics, and both in the arid climate. Sized capacities are reported per component in the SI Section S2.
+
+\subsection{Out-of-sample cost}
+
+The three methods yielded very similar mean out-of-sample total cost (Figure~\ref{fig:total_cost}). SO-CVaR carried a small premium over LP-Avg in every one of the ten climate--architecture cells at medium VoLL, ranging from +0.21\% (MN--PVB) to +1.49\% (FL--PVB), with a median of +0.45\%; LP-Avg was the marginal cost minimizer everywhere. Against LP-Worst, SO-CVaR was cheaper in all ten cells, mostly notably in cold climates by up to $-3.3$\% (AK--PVB). In every cell, these differences between methods were smaller than the variation in cost across folds. In AK, for example, the standard deviation across folds was 13\% of mean cost, whereas the three methods differed by only 4\%. On total cost alone, therefore, the methods cannot be distinguished within the range of fold-to-fold weather variation. LP-Worst achieved robustness through additional capital rather than through lower total cost, while SO-CVaR adopted an intermediate level of capital investment. SO-CVaR's reliability advantages were obtained at comparable cost to LP-Avg. LP-Avg, however, has much more variation by weather year and much more VoLL cost; thus, SO-CVar reduces uncertainty in cost and reliability.
+
+\begin{figure*}
+\centering
+\includegraphics[width=\linewidth]{fig2_total_cost.pdf}
+\caption{Out-of-sample annual total system cost by climate for the two renewable architectures (PV+battery; hatched means with phase-change thermal storage) under the three sizing methods (color). Each bar is the mean over the 5 test years and 5 cross-validation folds; whiskers are +/-1 standard deviation across folds. Value of lost load (VoLL) is at the representative Med level (thermal \$3/kWh, critical electrical \$100/kWh). Note the independent per-climate y-axes (thousand USD/yr).}
+\label{fig:total_cost}
+\end{figure*}
+
+\subsection{Out-of-sample reliability calibration}
+
+The clearest difference among the methods was calibration: whether a design delivered, on weather years it had never seen, the reliability it was sized for (Figure~\ref{fig:total_cost}). This was measured as a ratio per cell: the loss of load a design incurred on its held-out test years divided by the loss of load the same design incurred on its training years. For a ratio of one, delivered reliability matched the planning estimate. A ratio Above one meant capacity was insufficient for the unseen conditions (under-provision), and a ratio below one built capacity the test years did not require (over-provision).
+
+\begin{figure*}
+\centering
+\includegraphics[width=\linewidth]{fig3_calibration.pdf}
+\caption{Out-of-sample reliability calibration across all three VoLL levels (30 climate x architecture x VoLL cells, 10 per method); loss of load is essentially all thermal. (a) Mean training-year unmet energy (planned) versus mean test-year unmet energy (delivered), over the 5 folds; the dashed line is perfect calibration (test = plan), with points above it under-provisioned out of sample and points below over-provisioned. Legend color denotes method, and marker fill is binary architecture (with/without thermal storage). Note log-log axes (climate scales differ $\sim$100x). (b) Per-method test/plan unmet-energy ratio (bar = median; 1.0 = calibrated): SO-CVaR 1.02, LP-Avg 1.11, LP-Worst 0.51.}
+\label{fig:calibration}
+\end{figure*}
+
+Two levels of aggregation were used. Within each cell, the five cross-validation folds were averaged to provide one out-of-sample value per design. These 30 values were then summarised by their median for each method, which is robust to the unstable ratios that arise in cells where almost no load goes unserved. In Figure~\ref{fig:calibration}, the median and total distribution for each method is shown. SO-CVaR achieved the closest calibration (median ratio 1.02), indicating that the risk-aware formulation neither systematically under- nor over-provisioned, compared with LP-Avg (1.11) and LP-Worst (0.51).
+
+Cell by cell, SO-CVaR was best calibrated in 26 of the 30, and the four exceptions were all tropical. In these hot, humid climates, so little load goes unserved that the denominator nearly vanishes, so a small absolute difference between planned and delivered energy produces a large ratio, inflating every method's value well above one (SO-CVaR reaches roughly 2.1). Higher-capacity designs yield a ratio closer to one through this arithmetic alone. The median is insensitive to these few unstable values, and is thus reported.
+
+The ranking is unchanged when the cells were summed rather than read individually. Summing unserved load across all 30 cells for the training years and again for the test years, LP-Avg total was 17.2\% higher on the test years, SO-CVaR 7.6\% higher, and LP-Worst 51.4\% lower. The fact that the same ranking appears in both metrics shows the result does not depend on how the cells are combined. LP-Avg delivered less reliability than it planned for; LP-Worst delivered far more, spending significant capital to do so; and SO-CVaR matched its plan on unseen years. Section 3.4 addresses whether this advantage comes from the risk term or from stochastic optimization itself.
+
+\subsection{Risk reduction}
+
+Beyond matching its planned reliability, SO-CVaR also improved two out-of-sample metrics relative to the other methods (Figure~\ref{fig:risk}): the reliability tail --- loss of load in the worst test fold (the highest of the five fold-mean values) --- and the fold-to-fold standard deviation of total system cost across the held-out weather years. Worst-fold unmet load fell by a median of 21\% compared with LP-Avg; it decreased in all 30 cells, and the reduction tended to be larger at higher VoLL scenarios (roughly 12\% at low, 20\% at medium and 48\% at high), since SO-CVaR weights adverse years more heavily. Cost predictability improved on the same designs, which is a more convincing result. Second, the fold-to-fold standard deviation of annualized total cost --- capital, fixed O\&M and loss of load penalties, evaluated on the test split --- was lower for SO-CVaR than for LP-Avg in every one of the 30 cells, with a median reduction of 31\%. The improvement only required 5\% more capital cost than LP-Avg, though offset by 4\% lower expected unserved-energy penalties (total only for SO-CVaR 1\% higher).
+
+\begin{figure*}
+\centering
+\includegraphics[width=\linewidth]{fig4_risk.pdf}
+\caption{SO-CVaR versus the average-year design (LP-Avg) on the out-of-sample test split. Each point is one climate x architecture x VoLL cell (30 total); x = LP-Avg, y = SO-CVaR, dashed line = equality (points below favor SO-CVaR); color is value of lost load (VoLL) level; marker is binary architecture (inclusive of phase change material (PCM). (a) Worst-fold unmet energy (a coarse tail proxy): the largest of the 5-fold mean value, where loss of load is essentially all thermal); note SO-CVaR is lower in 30/30 cells (median 21\% reduction). (b) Across-fold standard deviation (SD) of total cost (year-to-year cost stability): SO-CVaR is lower in 30/30 cells (median 31\% reduction). The tail gain in (a) is  $\sim$1\% more expensive; the cost-stability gain in (b) provides an unconfounded result.}
+\label{fig:risk}
+\end{figure*}
+
+\subsection{Diesel break-even}
+
+The renewable microgrid was cheaper than an all-diesel generator microgrid at a delivered fuel price of \$0.78--8.90/gal across all climates and architectures (Figure~\ref{fig:diesel_breakeven}); given the break-even is solved for the price at which the two annualized costs are equal, it requires no assumed fuel price. Four of the five climates broke even at or below ordinary commercial diesel fuel prices ($\sim$\$3--5/gal). The exception is in polar climates, which was driven by weak solar resources requiring significant additional PV capacity, rather than by diesel economics. However, it is still lower than the routine delivery or contest delivery cost. PCM lowered the break-even point by 4--14\% effect across climates.
+
+\begin{figure*}
+\centering
+\includegraphics[width=\linewidth]{fig5_diesel_breakeven.pdf}
+\caption{Diesel break-even analysis at the representative moderate value of lost load (Med VoLL) operating point (thermal \$3/kWh, critical electrical \$100/kWh; diesel is VoLL-independent); annualized USD/yr on test-split years. Diesel total cost is recomputed at any delivered price p as fixed\_cost + gallons*p (gallons price-independent). (a) For Marine (CA), the diesel cost line (grey dashed; thin grey = other climates) crosses each architecture's recommended SO-CVaR design at \$1.5-1.7/gal, far left of the routine forward-delivery (\$13-45/gal) and contested-delivery (\$100-600/gal) bands. (b) Break-even delivered diesel price for the recommended SO-CVaR design in every climate (bars: hatch = architecture; error bars = +/-1 SD across folds); all below $\sim$9 \$/gal everywhere and the routine forward-delivery band.}
+\label{fig:diesel_breakeven}
+\end{figure*}
+
+\section{Discussion}
+
+\subsection{A trustworthy replacement for diesel}
+
+Beyond the price of diesel, the true cost also includes the full burden of the supply chain. In a combat zone where fuel convoys are exposed or at risk, resupply carries roughly one casualty per 24 convoys \parencite{ref52}. This also constrains siting of FOBs with respect to supply hubs and how long FOBs can operate if supply chains are compromised.  Remote communities face a seasonal version of the same dependency, where barge windows, ice roads and weather cancellations set the interval between deliveries. Missing a delivery can mean running out of power or heat, and thus serious consequences for life. Local renewable generation is an invaluable alternative to eliminate these uncertainties in supply.
+
+However, renewable microgrids are susceptible to intermittency in generation. Diesel generation can absorb the effect of  an adverse year to some extent; thus, the design of a renewable microgrid is critical to reduce uncertainty of weather variability and minimize lost load. Given the VoLL is finite and chosen by the designer depending on user needs, the economic optimum sits at a small, deliberate level of loss of load; the key is that such level chosen at planning should be the level delivered in operation. SO-CVaR designs met this constraint on the unseen test set of weather (Section 3.3), and because the break-even was computed on the same held-out years, it describes how the actual system would operate in future uncertain weather years rather than known training years. Diesel is held to a less quantitative or stringent  standard in this comparison. Its reliability rests on resupply arriving, an assumption seldom priced and highly uncertain.  Meanwhile, the renewable system's loss of load is explicit, budgeted, and verified out of sample.
+
+The advantage of SO-CVaR should be larger in practice than these results indicate, since dispatch here assumes perfect foresight of each weather year while a real system operates on a limited forecast horizon. That adds uncertainty the model does not carry, and a risk-aware design can absorb this uncertainty to a better extent.
+
+\subsection{The benefits of phase-change material thermal storage}
+
+PCM thermal storage adds thermal flexibility to the system. Without it, the heat pump has to run at the moment heating or cooling is needed. With thermal storage, the heat pump can run when energy is available, store the heat or cooling, and release it later when demand arrives. This separates when the system draws electricity from when thermal demand. In a system with no backup generator, that flexibility would otherwise have to come from the battery. Given heat is far cheaper to store than electricity, this lowers total system cost. This savings improves financial feasibility of renewable microgrids, as shown by a relatively low diesel fuel price break-even point in every climate studied here. Even without thermal storage, the PV--battery design broke even below realistic fuel prices in most climates. The two design choices thus contribute differently. Risk-aware sizing makes the reliability trustworthy in future weather years, and thermal storage adds flexibility that replaces costly battery capacity and lowers cost further.
+
+\subsection{Limitations}
+
+There are two main limitations to this study. The first is the gap, noted above, between how the system was modeled and how it would run in practice. The dispatch is solved with perfect knowledge of each weather year in advance, and critical electrical load is priced so highly that it is essentially always served at the expense of thermal loss of load. A controller running in real time cannot always see a shortage in advance, thus cannot prepare to shed thermal load to meet critical load and result in more critical loss of load than a perfect-foresight study here. Therefore, it is even more crucial to design a reliable energy system in reality. Because this applies equally to all methods (LP and SO-CVaR), it affects the absolute reliability levels rather than the comparison between them.
+
+The second limitation concerns why the risk-aware design reduces the tail of the unserved-energy cost distribution. Part of that reduction arises from building a somewhat larger system than the average-year design, since more capacity reduces loss of load on its own. This cannot fully be separated from the effect of allocating capacity more intelligently among the technologies. A comparison at equal capital costs would isolate the part attributable to risk allocation.
+
+\section{Conclusion}
+
+This study evaluated whether a fully-renewable islanded microgrid can replace diesel at a remote or mission-critical site, sizing each design on 25 years of weather, and testing it on years it had not seen across five climate zones.
+
+The three sizing methods reached similar cost, but only the risk-aware CVaR stochastic program delivered a reliable estimate of performance on unseen weather years. The average-year and worst-year heuristics under- and over-provisioned. Every method balances added capacity against unmet load to reach the optimum influenced by the value of lost load. The CVaR design strikes that balance on weather years it was never sized against, so the trade-off chosen at planning is the one actually delivered in operation. PCM storage lowered cost further, replacing the battery's role and adding flexibility to shift heating and cooling in time, yielding an even more competitive system compared with diesel.
+
+The recommended SO-CVaR designs broke even with diesel at delivered fuel prices of \$0.78--8.90/gal across climates, at or below ordinary commercial prices in four of the five case studies. Thus, in military applications this also falls below routine forward delivery (\$13--45/gal) and one to two orders of magnitude below delivery to a combat zone (\$100--600/gal). More importantly, the system eliminates fuel dependence entirely, which suits the sites where diesel is hardest to sustain. This lets an operator commit to a reliability level and a non-volatile annual budget that a fuel-dependent system cannot offer.
+
+The wider significance is that a fully renewable microgrid can be made more dependable on unseen weather, using design methods like SO-CVaR, and cheaper than diesel at exactly the sites where diesel fuel supply chains are less secure. Achieving this depends as much on how the renewable microgrid is sized as the type of technologies it contains. Although framed around a forward operating base, the underlying problem --- sizing an islanded energy system against interannual weather uncertainty --- is generic to any permanently off-grid site without dispatchable backup, including remote communities, disaster-relief camps, island utilities and off-grid industrial or research stations.
+
+\paragraph{Acknowledgments}
+We thank the Stanford High Performance Computing Center for providing support and the computational resources essential to this research. This work was supported in part by funding provided by Dan Sambor through the U.S. Army Corps of Engineers Engineer Research and Development Center under Federal Award Identification Number W9132T2220006.
+
+\paragraph{Funding Statement}
+This research was supported by grants from the <funder-name><doi>(<award ID>); <funder-name><doi>(<award ID>).
+
+\paragraph{Competing Interests}
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\paragraph{Data Availability Statement}
+The code that reproduces the analysis in this study --- the capacity-planning and dispatch
+optimization models and the figure-generating scripts --- is openly available in the
+\emph{Capacity\_Algo} repository on GitHub at
+\url{https://github.com/ARResearchCC/Capacity_Algo} \parencite{capacityalgo}. The weather inputs
+are drawn from the publicly available U.S.\ National Solar Radiation Database (NSRDB)
+\parencite{ref35}.
+
+\paragraph{Ethical Standards}
+The research meets all ethical guidelines, including adherence to the legal requirements of the study country.
+
+\paragraph{Declaration of Generative AI and AI-Assisted Technologies}
+During the preparation of this work the authors used Claude (Anthropic) to refine and copy-edit
+the language of an author-written draft. The tool was not used to generate original scientific
+content, analyze data, or produce figures. The authors reviewed and edited all output and take
+full responsibility for the content of the publication.
+
+\paragraph{Author Contributions}
+\noindent
+Conceptualization: Y.F.F. 
+Methodology: Y.F.F.; M.J.; D.J.S. 
+Software: Y.F.F.; M.J.; A.M. 
+Validation: Y.F.F.; M.J.; D.J.S. 
+Formal analysis: Y.F.F.; M.J. 
+Investigation: Y.F.F.; M.J.; D.J.S.; A.M. 
+Resources: D.J.S. 
+Data curation: Y.F.F.; A.M. 
+Writing -- original draft: Y.F.F.; M.J.; D.J.S. Writing -- review \& editing: Y.F.F.; M.J.; D.J.S.; A.M.; J.G.F; M.Z.J. 
+Visualization: Y.F.F.; M.J. 
+Supervision: D.J.S.; M.Z.J. 
+Project administration: D.J.S.; M.Z.J. 
+Funding acquisition: D.J.S.; M.Z.J. 
+All authors approved the final submitted draft.
+
+\printbibliography
+
+\end{document}

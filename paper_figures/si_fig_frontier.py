@@ -94,8 +94,7 @@ for ax, loc in zip(axes_flat[:5], S.LOCATION_ORDER):
     printed.append((loc, tags, order))
 
 # shared axis titles
-fig.supxlabel("Out-of-sample expected unmet energy (kWh/yr)  -  more reliable  <-",
-              fontsize=9)
+fig.supxlabel("Out-of-sample expected unmet energy (kWh/yr)", fontsize=9)
 fig.supylabel("Investment + O&M cost, excl. VoLL penalty ($/yr)", fontsize=9)
 
 # --------------------------------------------------------------------------- #

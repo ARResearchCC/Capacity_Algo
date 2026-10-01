@@ -1,0 +1,544 @@
+% ============================================================================
+%  SI.tex  --  Supplementary Information
+%  Target journal: Cambridge Prisms: Energy Transitions (Cambridge Univ. Press)
+%  Submission portal (ScholarOne): https://mc.manuscriptcentral.com/prisms-etr
+%
+%  COMPILES STANDALONE in the same folder as your manuscript (sample.tex):
+%    pdflatex SI  ->  bibtex SI  ->  pdflatex SI  ->  pdflatex SI
+%    (Overleaf runs this automatically when SI.tex is the selected main file.)
+%
+%  REFERENCES: uses the SHARED reference.bib (same file as the main manuscript),
+%  via natbib in author-date form to match the Cambridge A style. In-text
+%  citations use \citep{...}. Only cited works appear in the SI reference list.
+%
+%  WHAT CHANGED IN THIS VERSION (reorganisation):
+%   * The old small "Cost parameters" table was DELETED -- it duplicated the big
+%     parameter table (which already lists every capital and O&M cost).
+%   * The big table was SPLIT by purpose:
+%       - techno-economic/physical parameters -> Table in Section S3;
+%       - model notation (decision variables + nodes) -> nomenclature table in
+%         Section S5, placed right before the constraint equations.
+%   * Broken table nesting and the [H] float specifier were removed.
+%
+%  PLACEHOLDERS you still handle:
+%   * Figure files si_fig_*.pdf must be present in the project (real
+%     \includegraphics calls are used below).
+%   * Section S5 gives the dispatch CONSTRAINTS; add the objective functions
+%     (LP-Avg / LP-Worst / SO-CVaR + Rockafellar-Uryasev CVaR block) if desired.
+%   * The redundant, ambiguous VoLL rows (C_E, C_T) were removed from the params
+%     table; VoLL is now given once, in the dedicated table (Section S4).
+% ============================================================================
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}}{} % optional; Overleaf has it
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{authblk}
+\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\usepackage{lineno}
+\usepackage[round,authoryear]{natbib}   % author-date, round parentheses
+\usepackage[hidelinks]{hyperref}        % load last
+
+% ---- Supplementary numbering: "S" prefix on sections/tables/figures/eqs ----
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+\title{\vspace{-3em}Supplementary Information\\[0.35em]
+       \large Risk-Aware Capacity Planning and Phase-Change-Material Storage for
+       Maintaining Reliability at Low Cost in Fully-Renewable Islanded Microgrids}
+
+\author[1]{Yuanbei F. Fan\thanks{Corresponding author: \texttt{yf1098@stanford.edu}}}
+\author[2]{Muyan Jiang}
+\author[1]{Daniel J. Sambor}
+\author[1]{Andreas M\"uhlbauer}
+\author[1]{Jill G. Ferguson}
+\author[1]{Mark Z. Jacobson}
+\affil[1]{Department of Civil and Environmental Engineering, Stanford University, Stanford, CA, USA}
+\affil[2]{Department of Industrial Engineering and Operations Research, University of California, Berkeley, CA, USA}
+
+\date{}
+
+\begin{document}
+\maketitle
+\linenumbers   % required on submission; remove for the camera-ready if desired
+
+\noindent This Supplementary Information supports the main article and is organized into eight
+sections (S1--S8); supplementary figures and tables are numbered with an ``S'' prefix throughout.
+\medskip
+
+% ============================================================================
+\section{Sites and climate}\label{sec:sites}
+% ============================================================================
+
+Five sites were selected to span distinct K\"oppen--Geiger climate zones, such that the sizing
+methods were tested across the range of solar and thermal conditions, as shown in
+Table~\ref{tab:sites}.
+
+\begin{table}[!htbp]
+\centering
+\caption{Site and climate summary (cold to hot).}\label{tab:sites}
+\begin{tabular}{llccrr}
+\toprule
+Site & K\"oppen--Geiger & Latitude & Longitude & Elevation (m) & UTC offset \\
+\midrule
+Alaska (AK)     & Dfc     & $59.25^{\circ}$N & $-154.62^{\circ}$ & 699 & $-9$ \\
+Minnesota (MN)  & Dfa/Dfb & $44.97^{\circ}$N & $-93.26^{\circ}$  & 256 & $-6$ \\
+California (CA)  & Csb     & $37.49^{\circ}$N & $-122.42^{\circ}$ & 88  & $-8$ \\
+Arizona (AZ)    & BWh     & $33.45^{\circ}$N & $-112.06^{\circ}$ & 334 & $-7$ \\
+Florida (FL)    & Am/Aw   & $25.77^{\circ}$N & $-80.18^{\circ}$  & 7   & $-5$ \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize Source: NSRDB metadata (v3.2.2); 25 weather years, 1998--2022.}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{si_fig_variability.pdf}
+\caption{Interannual variability of the three climate drivers across 25 weather years
+(1998--2022), one box per site (cold to hot). Panels: (a) PV yield, (b) heating demand,
+(c) cooling demand.}
+\label{fig:variability}
+\end{figure}
+
+For each site, 25 consecutive years of hourly meteorological data (1998--2022) were obtained from
+the U.S. National Solar Radiation Database (NSRDB) \citep{ref35} (5 sites $\times$ 25 years = 125
+location-years). Using the full 25-year record at hourly resolution preserved both the within-year
+seasonal structure and the between-year (interannual) variability that single-representative-year
+approaches neglect.
+
+The interannual spread of the resulting drivers is summarized in Figure~\ref{fig:variability}: PV
+yield, heating demand, and cooling demand each vary from year to year, and it is the extreme years
+in these distributions---not the median---that the risk-aware objective is designed to withstand.
+The spread is largest, and the solar resource weakest, at the polar site (Alaska), where a fully
+renewable system is therefore most exposed; this year-to-year variability is the reason every design
+is sized and tested across all 25 years rather than a single representative year.
+
+% ============================================================================
+\section{System optimal capacity}\label{sec:capacity}
+% ============================================================================
+Figure~\ref{fig:capacities} reports the capacities selected for every component, method,
+architecture, and climate---the per-component detail underlying the capacity summary in the main
+text. The PV, battery, and (where present) hot and cold PCM energy capacities were the decision
+variables; the heat pump was fixed at a 10~kW electrical rating.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{si_fig_capacities.pdf}
+\caption{Sized component capacities by method and architecture, faceted by climate (cold to hot).
+Rows: PV (kW), battery (kWh), hot and cold PCM (kWh thermal); PCM rows are blank for the
+PV+battery architecture. Bars are fold means $\pm$1\,SD (5 folds) at Med VoLL, with independent
+$y$-scales per row.}
+\label{fig:capacities}
+\end{figure}
+
+The figure resolves, component by component, the two patterns summarized in the main text: the risk
+spectrum in system size (LP-Worst largest, LP-Avg smallest, SO-CVaR intermediate), and the
+substitution of PCM for battery---introducing thermal storage leaves PV essentially unchanged but
+sharply shrinks the battery row, with the optimizer placing hot PCM in the heating-dominated
+climates, cold PCM in the tropics, and both in the arid climate.
+
+% ============================================================================
+\section{Techno-economic parameters, cost model, and annualization}\label{sec:cost}
+% ============================================================================
+All component physical, cost, and financial parameters are applied identically across the three
+planning methods and are listed in Table~\ref{tab:params}. Capital costs were annualized with a
+capital recovery factor (CRF) assuming a 20-year system lifetime and a 0.03 discount rate
+(CRF $\approx 0.067$); the total annual cost of a design is its annualized capital cost plus fixed
+O\&M plus the value-of-lost-load penalty on any unmet load (Section~\ref{sec:voll}).
+
+\begin{table}[!htbp]
+\centering
+\caption{Techno-economic and physical parameters of the sizing/dispatch model, applied identically
+across all three planning methods.}\label{tab:params}
+\small
+\begin{tabular}{llll}
+\toprule
+Symbol & Value & Description & Unit \\
+\midrule
+\addlinespace
+\multicolumn{4}{@{}l}{\textit{Time and efficiencies}}\\
+\( \delta t \)   & \( 1 \)       & Unit time-step length & hr \\
+\( \eta_{PV} \)  & \( 0.94 \)    & PV inverter efficiency & -- \\
+\( \eta_{B} \)   & \( 0.98 \)    & Battery charge/discharge efficiency & -- \\
+\( COP_H \)      & \( 3.5 \)     & Heat-pump heating coefficient of performance & -- \\
+\( COP_C \)      & \( 3.5 \)     & Heat-pump cooling coefficient of performance & -- \\
+\( l \)          & \( 0.01/24 \) & Battery leakage rate & 1/hr \\
+\( D_{max} \)    & \( 0.8 \)     & Battery maximum depth of discharge & -- \\
+\( C_{B} \)      & \( 0.25 \)    & Battery C-rate (4\,h full discharge) & -- \\
+\addlinespace
+\multicolumn{4}{@{}l}{\textit{Capital cost}}\\
+\( C_{c,PV} \)   & \( 1500 \)    & PV & \$/kW \\
+\( C_{c,B} \)    & \( 500 \)     & Battery & \$/kWh \\
+\( C_{c,HP} \)   & \( 1000 \)    & Heat pump & \$/kW \\
+\( C_{c,HS} \)   & \( 70 \)      & PCM heating storage & \$/kWh \\
+\( C_{c,CS} \)   & \( 70 \)      & PCM cooling storage & \$/kWh \\
+\addlinespace
+\multicolumn{4}{@{}l}{\textit{Fixed O\&M cost}}\\
+\( C_{o,PV} \)   & \( 15 \)      & PV & \$/kW/yr \\
+\( C_{o,B} \)    & \( 5 \)       & Battery & \$/kWh/yr \\
+\( C_{o,HP} \)   & \( 20 \)      & Heat pump & \$/kW/yr \\
+\( C_{o,HS} \)   & \( 2.8 \)     & PCM heating storage & \$/kWh/yr \\
+\( C_{o,CS} \)   & \( 2.8 \)     & PCM cooling storage & \$/kWh/yr \\
+\addlinespace
+\multicolumn{4}{@{}l}{\textit{Financial}}\\
+\( d \)          & \( 0.03 \)    & Private discount rate & 1/yr \\
+\( L \)          & \( 20 \)      & System lifetime & yr \\
+\( CRF \)        & \( 0.0672 \)  & Capital recovery factor & -- \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize Representative order-of-magnitude values consistent with the NREL ATB and cost
+literature~\citep{ref48}, applied identically across methods so that comparisons do not hinge on the
+exact values.}
+\end{table}
+
+% ============================================================================
+\section{Value of lost load}\label{sec:voll}
+% ============================================================================
+Unmet load was priced with the three VoLL levels in Table~\ref{tab:voll}. Electrical
+(mission-critical) load was valued far above thermal (flexible HVAC) load at every level.
+
+\begin{table}[!htbp]
+\centering
+\caption{Value of lost load (VoLL).}\label{tab:voll}
+\begin{tabular}{lcc}
+\toprule
+Level & Thermal (\$/kWh) & Critical/electrical (\$/kWh) \\
+\midrule
+Low  & 1  & 30  \\
+Med  & 3  & 100 \\
+High & 10 & 300 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{si_fig_voll.pdf}
+\caption{VoLL sensitivity for the representative marine climate (California): (a) annualized total
+cost and (b) total unmet load versus VoLL level (Low/Med/High), on the out-of-sample test split.
+Bands are $\pm$1\,SD across 5 folds.}
+\label{fig:voll}
+\end{figure}
+
+How the three methods rank depends almost entirely on how expensive unmet load is assumed to be
+(Figure~\ref{fig:voll}).
+At the Low and Med levels the cost differences between methods were smaller than the fold-to-fold
+scatter, so no method was meaningfully cheaper than another and the choice among them turned only
+on reliability. The methods separated only at the High level, and only with thermal storage in the
+mix: there SO-CVaR became the cheapest option outright (about \$51/yr below LP-Avg and \$142/yr
+below LP-Worst) while its unmet load fell to the level of the robust LP-Worst design. Without PCM
+this crossover did not appear and SO-CVaR remained a small premium over LP-Avg. Because most
+realistic operating assumptions sit in the Low--Med range, we treat SO-CVaR as being at comparable
+cost to LP-Avg and adopt the Med level as the representative operating point for the other figures;
+California is shown here because pooling all climates would let Alaska's much larger magnitudes
+dominate the picture.
+
+% ============================================================================
+\section{Optimization formulation}\label{sec:formulation}
+% ============================================================================
+All three methods shared the same hourly dispatch physics and differed only in how they handled
+interannual uncertainty: LP-Avg optimized on the mean of the per-year optima, LP-Worst on the worst
+training year, and SO-CVaR solved a two-stage stochastic program with a Rockafellar--Uryasev CVaR
+linearization ($\lambda = 0.9$, $\alpha = 0.9$, fixed a priori)~\citep{ref44}. The notation used in
+the model is defined in Table~\ref{tab:nomenclature}; parameter values are given in
+Table~\ref{tab:params}.
+
+\begin{table}[!htbp]
+\centering
+\caption{Nomenclature for the sizing/dispatch model: indices, decision variables, and nodes.}
+\label{tab:nomenclature}
+\small
+\begin{tabular}{lll}
+\toprule
+Symbol & Description & Unit \\
+\midrule
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{Indices and sets}}\\
+\( t \in \mathcal{T} \)   & Hourly time step & -- \\
+\( N_t \)                 & Number of time steps & -- \\
+\( i \)                   & Device index & -- \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{Decision variables}}\\
+\( X_i \geq 0 \)          & Capacity of device \( i \) & kW or kWh \\
+\( P^A_B[t] \geq 0 \)     & Electric power flow from node \( A \) to \( B \) at time \( t \) & kW \\
+\( \dot{Q}^A_B[t] \geq 0 \) & Thermal power flow from node \( A \) to \( B \) at time \( t \) & kW \\
+\( S_i[t] \geq 0 \)       & Available energy in storage of device \( i \) at time \( t \) & kWh \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{Nodes}}\\
+\( PV \) & Solar PV panel & -- \\
+\( B \)  & Electrical battery & -- \\
+\( HS \) & PCM heating storage & -- \\
+\( CS \) & PCM cooling storage & -- \\
+\( HP \) & Electrical air-source heat pump & -- \\
+\( H \)  & Heat-pump heating & -- \\
+\( C \)  & Heat-pump cooling & -- \\
+\( G \)  & Grid/ground (imaginary, for modeling) & -- \\
+\( T \)  & Thermal demand & -- \\
+\( E \)  & Electrical demand & -- \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize The heat-pump rating $X_{HP}$ is fixed at 10~kW (a parameter, not a decision
+variable); the sized capacities are $X_{PV}$, $X_{B}$, $X_{HS}$, and $X_{CS}$.}
+\end{table}
+
+Each method sizes these capacities to minimize the total annual system cost---the annualized
+capacity cost plus the value-of-lost-load (VoLL) penalty on any unserved demand. For a single
+weather year the deterministic linear program is
+\begin{equation}
+\min \;\; \sum_{i \in \mathcal{I}} \bigl(\mathrm{CRF}\, C_{c,i} + C_{o,i}\bigr)\, X_i
+\;+\; \delta t \sum_{t \in \mathcal{T}} \bigl(v_T\, P^{G}_{T}[t] + v_E\, P^{G}_{E}[t]\bigr),
+\label{eq:objective}
+\end{equation}
+where $\mathcal{I}=\{PV,\,B,\,HP,\,HS,\,CS\}$; the first term is the annualized capacity cost (unit
+capital $C_{c,i}$ and fixed O\&M $C_{o,i}$ from Table~\ref{tab:params}, annualized by the CRF), and
+the second is the VoLL penalty on the shed flows $P^{G}_{T}$ and $P^{G}_{E}$---the unserved
+thermal-service and critical-electrical loads---priced at the thermal and critical VoLL $v_T$ and
+$v_E$ (Table~\ref{tab:voll}). LP-Avg and LP-Worst solve this program for each training year and set
+the design to, respectively, the mean and the worst-year capacities; SO-CVaR minimizes the same
+capacity cost but replaces the single-year penalty with a risk-weighted combination of its mean and
+its $\mathrm{CVaR}_{\alpha}$ over the training years ($\lambda=\alpha=0.9$).
+
+The constraints in the LP model are listed as follows.
+
+The PV generation is distributed among battery storage, thermal load, electrical demand, and curtailment:
+\begin{equation}
+G[t] \cdot X_{PV} = P^{PV}_B[t] + P^{PV}_T[t] + P^{PV}_E[t] + P^{PV}_G[t], \quad \forall t \in \mathcal{T}
+\label{eq:pv_balance}
+\end{equation}
+
+The total electrical power consumed at the thermal end use (heat pump heating and cooling) is met by PV and battery discharge, or otherwise load is shed:
+\begin{equation}
+P^{T}_{H}[t] + P^{T}_{C}[t] =  P^{PV}_T[t] \cdot \eta_{PV} + P^{B}_T[t] \cdot \eta_{B} + P^{G}_T[t], \quad \forall t \in \mathcal{T} \label{eq:heating_elec}
+\end{equation}
+
+The total electrical power used to meet the critical load is met by PV and battery discharge, or otherwise load is shed:
+\begin{equation}
+E[t] = P^{PV}_E[t] \cdot \eta_{PV} + P^{B}_E[t] \cdot \eta_{B} + P^{G}_E[t], \quad \forall t \in \mathcal{T} \label{eq:crit_load}
+\end{equation}
+
+The total passive heat transfer is offset by active heating and cooling (including heat pump operation and PCM storage discharge), resulting in zero net heat gain:
+\begin{equation}
+(\dot{Q}^H_T[t] - \dot{Q}^C_T[t] + \dot{Q}^{HS}_T[t] - \dot{Q}^{CS}_T[t]) - T[t] = 0 , \quad \forall t \in \mathcal{T} \label{eq:hvac_balance}
+\end{equation}
+
+The state of charge in the battery at each time step depends on the previous charge level, accounting for losses, along with PV charging and discharging to thermal and electrical loads:
+\begin{equation}
+    S_{B}[t+1] = (1 - \delta t \cdot l) S_{B}[t] + \delta t \bigl(P^{PV}_B[t] \cdot \eta_{PV} - P^{B}_T[t] - P^{B}_E[t]\bigr), \quad \forall t \leq N_t-1
+    \label{eq:batt_dyn}
+\end{equation}
+
+The thermal energy stored in the PCM heating and cooling storage changes according to the balance between heat injection and extraction for temperature control:
+\begin{equation}
+S_{HS}[t+1] = S_{HS}[t] + \delta t (\dot{Q}^{H}_{HS}[t] - \dot{Q}^{HS}_T[t]), \quad \forall t \leq N_t-1
+\label{eq:pcmh_dyn}
+\end{equation}
+\begin{equation}
+S_{CS}[t+1] = S_{CS}[t] + \delta t (\dot{Q}^{C}_{CS}[t] - \dot{Q}^{CS}_T[t]), \quad \forall t \leq N_t-1
+\label{eq:pcmc_dyn}
+\end{equation}
+
+The battery and thermal storage systems are initialized and terminated at half of their rated capacity:
+\begin{align}
+S_{B}[1] = S_{B}[N_t] &= 0.5 X_B \label{eq:batt_bc} \\
+S_{HS}[1] = S_{HS}[N_t] &= 0.5 X_{HS} \label{eq:pcmh_bc} \\
+S_{CS}[1] = S_{CS}[N_t] &= 0.5 X_{CS} \label{eq:pcmc_bc}
+\end{align}
+
+The battery charging and discharging power are constrained to 25\% of its rated capacity:
+\begin{equation}
+P^{PV}_B[t] \leq C_{B} X_B, \quad \forall t \in \mathcal{T}
+\label{eq:b_charge_limit}
+\end{equation}
+\begin{equation}
+P^B_T[t] + P^B_E[t] \leq C_{B} X_B, \quad \forall t \in \mathcal{T}
+\label{eq:b_discharge_limit}
+\end{equation}
+
+The energy discharge is bounded by the available stored energy:
+\begin{equation}
+\delta t (P^B_T[t] + P^B_E[t]) \leq S_B[t], \quad \forall t \in \mathcal{T}
+\label{eq:batt_discharge}
+\end{equation}
+\begin{equation}
+\delta t \dot{Q}^{HS}_T[t] \leq S_{HS}[t], \quad \forall t \in \mathcal{T}
+\label{eq:pcmh_limit}
+\end{equation}
+\begin{equation}
+\delta t \dot{Q}^{CS}_T[t] \leq S_{CS}[t], \quad \forall t \in \mathcal{T}
+\label{eq:pcmc_limit}
+\end{equation}
+
+The stored energy in the battery must remain above the maximum allowable depth of discharge:
+\begin{equation}
+  X_B(1 - D_{max}) \leq S_B[t], \quad \forall t \in \mathcal{T} \label{eq:b_max_discharge}
+\end{equation}
+
+The stored energy in each system cannot exceed its maximum rated capacity:
+\begin{equation}
+S_B[t] \leq X_B, \quad \forall t \in \mathcal{T} \label{eq:batt_size}
+\end{equation}
+\begin{equation}
+S_{HS}[t] \leq X_{HS}, \quad \forall t \in \mathcal{T} \label{eq:pcmh_size}
+\end{equation}
+\begin{equation}
+S_{CS}[t] \leq X_{CS}, \quad \forall t \in \mathcal{T} \label{eq:pcmc_size}
+\end{equation}
+
+The total heating output (for both space heating and PCM heating storage charging) equals the electrical power consumed by the heat pump's heating mode multiplied by its coefficient of performance:
+\begin{equation}
+P^T_H[t] \cdot COP_H = \dot{Q}^H_T[t] + \dot{Q}^H_{HS}[t], \quad \forall t \in \mathcal{T}
+\label{eq:hp_heating}
+\end{equation}
+
+The total cooling output (for both space cooling and PCM cooling storage charging) equals the electrical power consumed by the heat pump's cooling mode multiplied by its coefficient of performance:
+\begin{equation}
+P^T_C[t] \cdot COP_C = \dot{Q}^C_T[t] + \dot{Q}^C_{CS}[t], \quad \forall t \in \mathcal{T}
+\label{eq:hp_cooling}
+\end{equation}
+
+The combined heating and cooling power cannot exceed the heat pump capacity:
+\begin{equation}
+P^T_H[t] + P^T_C[t] \leq X_{HP}, \quad \forall t \in \mathcal{T}
+\label{eq:hp_capacity}
+\end{equation}
+
+% ============================================================================
+\section{Comparison to plain (risk-neutral) stochastic optimization and risk-parameter robustness}\label{sec:riskneutral}
+% ============================================================================
+The comparisons so far pit SO-CVaR against LP-Avg and LP-Worst, both of which collapse the 25
+weather years to a single representative year before sizing. A stricter test isolates the risk term
+itself: SO-CVaR ($\lambda = 0.9$) against the risk-neutral form of the identical two-stage program
+($\lambda = 0$), each sized on the training years alone (PCM architecture). On the held-out years the
+risk term lowered mean unmet load in all 15 climate $\times$ VoLL cells (median 40\%) and worst-fold
+unmet load in all 15 (median 19\%), for a median cost premium of just 1.2\%
+(Figure~\ref{fig:riskterm}). The risk-neutral design is the one built to minimize expected cost, yet
+it delivered more unserved load on average once the weather changed---it had fit the training years
+too closely---whereas weighting the adverse tail produced a design that held up on weather it had
+never seen. The gain is thus a property of risk aversion, not of stochastic optimization alone.
+
+\begin{figure}[!htbp]
+\centering
+% source: paper_figures/main/fig5_riskterm.pdf (ensure the file is present under this name)
+\includegraphics[width=\linewidth]{si_fig_riskterm.pdf}
+\caption{The risk term versus the risk-neutral stochastic program. Within the same nested
+cross-validation, the CVaR design ($\lambda=0.9$) is compared against the risk-neutral two-stage
+program ($\lambda=0$) for the PCM architecture across five climates and three VoLL levels
+(15 cells, $\alpha=0.9$). Each point is one cell; $x$ = risk-neutral SO, $y$ = CVaR, dashed
+line = equality, so points below favor CVaR. Color = VoLL. (a) Mean out-of-sample unmet
+energy: CVaR is lower in all 15 cells (median 40\% reduction). (b) Worst-fold (tail) unmet
+energy: CVaR is lower in all 15 cells (median 19\% reduction). Median out-of-sample total-cost
+premium: 1.2\%.}
+\label{fig:riskterm}
+\end{figure}
+
+A natural worry is that this advantage is an artifact of the particular risk setting we chose. It is
+not. We fixed the CVaR weight and confidence at $(\lambda,\alpha)=(0.9,0.9)$ a priori---a
+deliberately risk-averse posture for a mission-critical base, and one that leaves SO-CVaR as
+knob-free as the LP baselines---and then probed the surrounding parameter space by nested
+cross-validation, so the held-out folds never influenced the setting. Two things follow. First, the
+out-of-sample cost surface is smooth rather than knife-edged: minimizing expected cost alone would
+pull toward the risk-neutral corner ($\lambda = 0$), and our chosen point sits on a gentle slope
+only about 1.4\% above that cost minimum. Second, fixing the risk-averse setting rather than
+selecting $(\lambda,\alpha)$ per fold costs only a small, bounded amount out of sample---a mean of
+1.58\% and at most 6.27\% across cells. We therefore make no claim that $(0.9,0.9)$ is cost-optimal;
+it is a stated risk preference whose modest cost buys the tail reliability seen in the loss-of-load
+results (Section~\ref{sec:oos}). Because the setting was neither tuned to the test data nor perched on a fragile optimum, the
+reliability gains above are properly attributed to risk aversion itself rather than to parameter
+search.
+
+% ============================================================================
+\section{Out-of-sample evaluation}\label{sec:oos}
+% ============================================================================
+The 25 weather years were split into five contiguous 5-year blocks; in each fold we trained on 20
+years and tested on the held-out 5, fixing the sized capacities and re-simulating them out of sample
+(see also Figure~3, main text).
+
+The honest measure of a planning method is not how well it fits the years it was trained on, but how
+far it slips on years it never saw. Pooled across architectures and climates, SO-CVaR degraded
+least: its expected unmet energy rose by only 7.6\% from training to test, against 17.2\% for
+LP-Avg---a clear sign of overfitting---while LP-Worst went the other way, its unmet load falling
+51.4\% out of sample, the signature of a design so conservative that the test years look easy by
+comparison. LP-Avg was also the only method whose cost crept up out of sample (+1.8\%). LP-Worst did
+post the lowest absolute test-year unmet load in every climate (Figure~\ref{fig:lossofload}, top
+row), but only by permanently over-provisioning; SO-CVaR's appeal is that it delivered close to the
+reliability it promised at near-cheapest cost, sitting at the knee of the cost--reliability
+trade-off (Figure~\ref{fig:frontier}) rather than at its most conservative extreme.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{si_fig_loss_of_load.pdf}
+\caption{Out-of-sample loss of load by climate at Med VoLL: (top) expected annual unmet energy and
+(bottom) worst single-event duration, each split into electrical/critical and thermal/HVAC service
+and grouped by method (color) and architecture (hatch). Test-split means $\pm$1\,SD across folds;
+per-climate $y$-scales.}
+\label{fig:lossofload}
+\end{figure}
+
+Figure~\ref{fig:lossofload} makes two features plain. First, loss of load was overwhelmingly
+thermal: critical electrical service was essentially never interrupted---at most 0.7\,kWh/yr of
+unmet energy (top row) and 1.2\,h of outage (bottom row) across all climates---so almost all
+residual unmet energy fell on the flexible HVAC load. This is by design: the VoLL structure
+(Section~\ref{sec:voll}) prices HVAC far below critical load, so when something must give, the
+optimizer sheds the cheap-to-shed service and protects the expensive one. Second, on the quantity it
+actually optimizes---expected thermal unmet energy, the thermal bars in the top row---SO-CVaR came
+in below LP-Avg in every climate. The worst-event duration in the bottom row tells a less tidy
+story---in marine California with PCM, SO-CVaR's worst outage is longer than LP-Avg's---but that is
+expected, since duration is only a coarse tail-severity proxy, whereas the objective minimizes the
+CVaR of the energy-weighted penalty, not the length of any single event.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{si_fig_frontier.pdf}
+\caption{Cost--reliability frontier by climate at Med VoLL. $x$-axis: expected annual unmet energy
+(leftward = more reliable); $y$-axis: investment plus non-penalty operating cost (the VoLL penalty
+is excluded so reliability is not double-counted). Color = method; open markers = PV+battery, filled
+= with PCM. Dashed line links the Pareto-efficient points; per-climate axes; points are test-split
+fold means $\pm$1\,SD.}
+\label{fig:frontier}
+\end{figure}
+
+Read as a trade-off, Figure~\ref{fig:frontier} makes the case for the SO-CVaR/PCM combination
+compactly, plotting each design's out-of-sample cost against its delivered unmet energy. In the
+temperate climates (Minnesota, California, Arizona) the PCM configurations sweep out the efficient
+frontier, while in the extreme climates (polar Alaska, tropical Florida) a few worst-case PV+battery
+designs remain Pareto-efficient. Across all five climates SO-CVaR with PCM lies on the frontier---no
+design beats it on both cost and reliability at once---so adopting it as the default costs a planner
+nothing on either axis. Florida is the sharpest illustration of the converse: there SO-CVaR/PCM
+dominates the worst-case LP-Worst/PCM design outright on both axes, direct evidence that sizing to a
+single worst year overfits.
+
+% ============================================================================
+\section{Diesel benchmark}\label{sec:diesel}
+% ============================================================================
+As a reference, we sized an all-diesel configuration (no PV, battery, or PCM) with the generator
+rated to peak load plus a 20\% reserve, a load-dependent linear fuel curve, and delivered-fuel price
+tiers of \$13, \$45, and \$400 per gallon. The break-even fuel price---the delivered price at which
+diesel matches the renewable-plus-storage system on annual cost---was defined independently of the
+assumed diesel price. Across climates it ranged from \$0.78 to \$8.90 per gallon (Figure~5, main text), below even routine forward-delivered fuel, so the renewable systems were favored under any
+realistic delivered-fuel cost.
+
+% Note: finalise the generator cost and fuel-curve parameters against a cited source.
+
+% ============================================================================
+%  REFERENCES  --  shared reference.bib (author-date, natbib). Only cited works appear.
+%  To switch the SI to NUMBERED references: change \bibliographystyle to unsrtnat
+%  below, and change the natbib option in the preamble to [numbers,sort&compress];
+%  in-text \citep{...} will then print as [N].
+% ============================================================================
+\bibliographystyle{plainnat}
+\bibliography{reference}
+
+\end{document}
