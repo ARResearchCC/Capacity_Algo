@@ -1,0 +1,50 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# --- Virtual environments (never publish) ---
+.venv/
+.venv.lock
+venv/
+venvCap/
+capa_algo/
+.venv_verify/
+
+# --- Cluster job logs ---
+logs/
+*.out
+*.err
+
+# --- Redundant raw archives ---
+*.zip
+
+# --- OS / editor clutter ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# --- Kept locally, not part of the public code release ---
+# Everything private lives in _private/ (manuscript drafts, raw cluster results, archived
+# code/results/plots, full git-history backup); see _private/README.md.
+_private/
+# safety net: never publish these if they reappear at their old locations
+Archives/
+manuscript/
+/main.tex
+/SI.tex
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+paper_figures/risk_parameter_justification.md
+# raw cluster-run copies (the read-location workbooks in the repo root,
+# FOB_Diesel_Results/ and Risk_Sweep_Results/ are the published copies)
+New_Results/
+
+# NOTE: results (*.xlsx), figures (*.png/*.pdf), plotted values (*.csv) and the
+# NSRDB weather in Data/ are INTENTIONALLY tracked so the repo reproduces the paper.

@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below, together with the accompanying paper."
+title: "Capacity_Algo: capacity-planning and dispatch-optimisation code for fully-renewable islanded microgrids"
+version: 1.0.0
+date-released: 2026-10-08
+license: MIT
+repository-code: "https://github.com/ARResearchCC/Capacity_Algo"
+url: "https://github.com/ARResearchCC/Capacity_Algo"
+type: software
+keywords:
+  - microgrid
+  - capacity planning
+  - conditional value-at-risk
+  - stochastic optimization
+  - phase-change material
+  - thermal energy storage
+authors:
+  - given-names: Yuanbei F.
+    family-names: Fan
+    affiliation: "Department of Civil and Environmental Engineering, Stanford University"
+  - given-names: Muyan
+    family-names: Jiang
+    affiliation: "Department of Industrial Engineering and Operations Research, University of California, Berkeley"
+  - given-names: Daniel J.
+    family-names: Sambor
+    affiliation: "Olin College of Engineering"
+  - given-names: Andreas
+    family-names: Mühlbauer
+    affiliation: "Department of Civil and Environmental Engineering, Stanford University"
+  - given-names: Jill G.
+    family-names: Ferguson
+    affiliation: "Department of Civil and Environmental Engineering, Stanford University"
+  - given-names: Spencer M.
+    family-names: Dutton
+    affiliation: "Lawrence Berkeley National Laboratory"
+  - given-names: Mark Z.
+    family-names: Jacobson
+    affiliation: "Department of Civil and Environmental Engineering, Stanford University"
